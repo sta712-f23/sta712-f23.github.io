@@ -5,7 +5,7 @@ title: Beginning prediction
 August 28
 : Logistic regression recap, reading a research paper
 
-: [LaTeX instructions](https://sta712-f23.github.io/latex_instructions/)
+: [LaTeX instructions](https://sta712-f23.github.io/homework/latex_instructions/)
 
 August 30
 : Prediction

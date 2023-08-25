@@ -15,8 +15,10 @@ seo:
 
 Welcome to the course website for STA 712!
 
-* Assignments and lecture notes can be found in the [Course Calendar](https://sta712-f23.github.io/calendar/)
+* Weekly homework assignments and lecture notes can be found in the [Course Calendar](https://sta712-f23.github.io/calendar/)
 
-* The [Syllabus](https://sta712-f23.github.io/about/) contains information about course policies and grading
+* A full list of current assignments (homework, projects, and challenges) is also posted in the [Assignment list](https://sta712-f23.github.io/assignment_list)
+
+* The [Syllabus](https://sta712-f23.github.io/about/) contains information about course policies, grading, and important due dates
 
 * Lecture and office hour times are given in the [Weekly Schedule](https://sta712-f23.github.io/schedule/)
