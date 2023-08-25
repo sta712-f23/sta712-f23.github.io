@@ -8,7 +8,7 @@ nav_exclude: true
 
 LaTeX is a typesetting system that allows you to create documents with a lot of control over the final appearance, and is widely used in fields like math and statistics for typesetting equations, including figures and tables, and managing references. While less common in industry than in academia, LaTeX can still be helpful for preparing reports, presentations, and manuscripts.
 
-In STA 712, you will use LaTeX to produce your project reports. To help prepare you for these reports, you will also be required to use LaTeX for some homework assignments. If you have never used LaTeX before, I recommend getting started with [Overleaf](https://www.overleaf.com/), and online LaTeX editor that makes it easy to compile documents and does not require any local installation on your computer.
+In STA 712, you will use LaTeX to produce your project reports. To help prepare you for these reports, you will also be required to use LaTeX for some homework assignments. If you have never used LaTeX before, I recommend getting started with [Overleaf](https://www.overleaf.com/), an online LaTeX editor that makes it easy to compile documents and does not require any local installation on your computer.
 
 ### Using Overleaf for HW assignments
 
