@@ -1,0 +1,132 @@
+\documentclass[12pt]{article}
+
+\usepackage{authblk} % author list
+
+% Fonts and typesetting
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage{microtype}
+\usepackage{booktabs}
+
+% More generous page layout
+\usepackage{geometry}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+
+\usepackage{natbib}
+\bibliographystyle{apalike}
+
+\usepackage[ttdefault=true]{AnonymousPro}
+\usepackage{float}
+
+% TODO Required for review.
+\usepackage{setspace}
+%\doublespacing
+
+\title{STA 712: HW 1}
+
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\noindent \textbf{Due:} Friday, September 8, 12:00pm (noon) on Canvas\\
+
+\noindent \textbf{Instructions:} Submit your work as a single PDF. Your document should be created using LaTeX; see the course website for a homework template file and instructions on getting started with LaTeX and Overleaf.
+
+\section{Practice reading a research paper}
+
+If you've every felt stressed around finals, you might have seen "animal therapy" opportunities organized by your school, in which students decompress by interacting with cute and cuddly animals like puppies and bunnies. Does interacting with animals actually help participants' wellbeing? In "The Importance of Client–Canine Contact in Canine-Assisted Interventions: A Randomized Controlled Trial" \url{https://www.tandfonline.com/doi/abs/10.1080/08927936.2021.1944558} (Binfet \textit{et al}. 2022, \textit{Anthrozoos}), the authors investigate whether interacting with dogs leads to increases in participant wellbeing, and decreases in participant illbeing. This activity will help you read the paper by Binfet \textit{et al}., and think about important study design and data collection questions.\\
+
+\noindent Reading a research paper, particularly in a field in which you are not an expert, can be challenging. The trick is to skim the paper for the most relevant information, and skip over technical details that are not essential to understanding the key take-aways. The questions below will guide you to the most important sections in the paper by Binfet \textit{et al}.
+
+\subsection*{Questions}
+
+\subsubsection*{The Abstract and Introduction}
+
+A good place to start is often with the Abstract and Introduction, which allow you get an overview of the paper, and usually don't contain too many technical details. The Abstract is more succinct than the Introduction, but it also provides less motivation. When the Introduction is long, you may want to skim for key details.\\
+
+\noindent Read the Abstract, and skim the Introduction (I recommend focusing on paragraphs 1, 2, 6, and 7). Then answer the following questions.
+
+\begin{enumerate}
+    \item In the abstract, the researchers explain that participants volunteered for the study. However, the title of the paper describes the study as a randomized controlled trial. Explain why these two statements do not conflict -- which part of the study design is randomized?
+    
+    \item What is the specific research question the researchers want to study, and what are their three hypotheses about this research question?
+\end{enumerate}
+
+\subsubsection*{Study Participants}
+
+Read the \textit{Student Participants} and \textit{Procedure} subsections of the Methods, and then answer the following questions.
+
+\begin{enumerate}
+    \item[3.]  How many students participated in the study?
+\end{enumerate}
+
+\noindent When reporting on human subjects research, it is very important that study participants should not be \textit{identifiable} in the data -- that is, we should not be able to determine the identities of individual participants from the information reported in the paper. This is key to protecting participants' privacy.
+
+\begin{enumerate}
+    \item[4.] Which details about participants have been omitted in the paper, which make participants identifiable if they were reported?
+\end{enumerate}
+
+\noindent Potential research subjects must meet certain criteria, defined by the researchers, to participate in a study. \textit{Inclusion} criteria define requirements for inclusion in the study (e.g., a target age range or social group), while \textit{exclusion} criteria are reasons a subject would be asked not to participate (e.g., certain medical conditions). 
+
+\begin{enumerate}
+    \item[5.] What are the inclusion/exclusion criteria for this study?
+\end{enumerate}
+
+
+\subsubsection*{Data Collection and Analysis}
+
+Now that we know who was studied, we want to know what data was collected about each participant, and how it was analyzed. Read the \textit{Procedure}, \textit{Analytic Plan}, \textit{Hypothesis 1}, and \textit{Hypothesis 2 and Hypothesis 3} subsections of the Methods, and skim the subsection headings for measures of wellbeing and measures of illbeing. Then answer the following questions.
+
+\begin{enumerate}
+    \item[6.] What are the three treatment groups, and how were participants assigned to each treatment?
+    
+    \item[7.] Summarize the different measures used to capture wellbeing and illbeing (you don't need to read about these measures in detail yet).
+    
+    \item[8.] The researchers describe \textit{pre-registering} their research plan. Pre-registration means that the researchers formally commit to a specific plan of analysis before collecting data. Why might pre-registration be important?
+    
+    \item[9.] Summarize the methods used to test the three hypotheses. Why are paired-sample $t$-tests appropriate for Hypothesis 1, but not for Hypotheses 2 and 3?
+\end{enumerate}
+
+
+\subsubsection*{Results}
+
+Finally, let's see what the researchers concluded from their statistical models. Details are provided in the \textit{Hypothesis 1} and \textit{Hypothesis 2 and Hypothesis 3} subsections of the Results. Read these subsections, then answer the following questions.
+
+\begin{enumerate}
+    \item[10.] What should the researchers conclude about their three hypotheses?
+    
+    \item[11.] The researchers randomly assigned participants to the three treatment groups. The benefit of random assignment is that we no longer need to worry about confounding variables, because no explanatory variable can be systematically associated with the treatment. So why do the researchers collect demographic information about their participants, and compare the demographics for the three groups in Table 1?
+\end{enumerate}
+
+\section{Reproducibility}
+
+When we do research, we want our work to be \textit{reproducible}: other researchers should be able to reproduce our results, given the same data. Unfortunately, published research is not always reproducible. In this part of the assignment, you will read about why reproducibility is important, and some good practices for making your own work more reproducible.\\
+
+\noindent To begin, read the following articles at the links provided:
+\begin{itemize}
+\item Peng, R. D. (2011). \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3383002/}{Reproducible research in computational science}. \textit{Science}, 334(6060), 1226-1227.
+
+\item Broman, K., Cetinkaya-Rundel, M., Nussbaum, A., Paciorek, C., Peng, R., Turek, D., \& Wickham, H. (2017). \href{https://www.amstat.org/docs/default-source/amstat-documents/pol-reproducibleresearchrecommendations.pdf}{Recommendations to funding agencies for supporting reproducible research}. American Statistical Association.
+\end{itemize}
+Then answer the following questions.
+
+\begin{enumerate}
+\item[12.] Briefly summarize why reproducibility is important in computational research.
+
+\item[13.] What steps can a researcher take to make their work more reproducible?
+
+\item[14.] Revisit the two papers you have read so far this semester (the dengue paper and the canine contact paper). Assess the reproducibility of these two papers. What factors are limiting their reproducibility, and how could reproducibility be improved?
+
+\item[15.] The articles here focus mostly on reproducibility in academic research, particularly published academic research. Suppose you are performing statistical analysis for a private company instead. Why might reproducibility (perhaps by another statistician in your company) still be important?
+\end{enumerate}
+
+
+\end{document}

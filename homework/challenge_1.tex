@@ -1,0 +1,108 @@
+\documentclass[11pt]{article}
+\usepackage{url}
+\usepackage{alltt}
+\usepackage{bm}
+\linespread{1}
+\textwidth 6.5in
+\oddsidemargin 0.in
+\addtolength{\topmargin}{-1in}
+\addtolength{\textheight}{2in}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbm}
+
+\begin{document}
+
+
+\begin{center}
+\Large
+STA 712 Challenge Assignment 1\\
+\normalsize
+\vspace{5mm}
+\end{center}
+
+\noindent \textbf{Due:} By Friday, November 10 at 12:00pm (noon) on Canvas.\\
+
+\noindent \textbf{Instructions:} 
+\begin{itemize}
+\item Submit your work as a single PDF. Use \TeX to type and format any math and equations, either with a \LaTeX editor (Overleaf, Texmaker, etc.), or directly in an R Markdown or Quarto document. Include all R code needed to reproduce your results in your submission.
+\item You are welcome to work with others on this assignment, but you must submit your own work.
+\item The goal of this assignment is for you to learn about a topic beyond the core material covered in class. If you get stuck, I am happy to chat over email or in office hours.
+\item You can probably find the answers to many of these questions online. It is ok to use online resources! But make sure to show all your work in your final submission.
+\end{itemize}
+
+\section*{Linear Discriminant Analysis (LDA) vs. Logistic Regression}
+
+The first topic in STA 712 is logistic regression. Logistic regression allows us to model the relationship between a binary response $Y$ and set of covariates $\bm{X}$. In the logistic regression model,
+
+$$P(Y_i = 1 | \bm{X}_i) = \dfrac{e^{\bm{\beta}^T \bm{X}_i}}{1 + e^{\bm{\beta}^T \bm{X}_i}}$$.
+
+\noindent However, logistic regression is not the only option for modeling $P(Y_i = 1 | \bm{X}_i)$. Other classifiers, like neural networks, random forests, and support vector machines, also exist. In this assignment, we will study a classification method called \textit{linear discriminant analysis} (LDA).
+
+\subsection*{Overview of LDA}
+
+Let $Y \in \{0,1\}$ be a binary response variable, and $\bm{X} \in \mathbb{R}^{k}$ be a vector of covariates. LDA assumes that, conditional on $Y$, $\bm{X}$ follows a multivariate normal distribution. That is,
+\begin{align}
+\label{eq:lda}
+\bm{X}|(Y = 0) \sim N(\bm{\mu}_0, \bm{\Sigma}) \hspace{1cm} \text{and} \hspace{1cm} \bm{X}|(Y = 1) \sim N(\bm{\mu}_1, \bm{\Sigma}),
+\end{align}
+where $\bm{\mu}_0, \bm{\mu}_1 \in \mathbb{R}^k$ are the means, and $\bm{\Sigma} \in \mathbb{R}^{k \times k}$ is the covariance matrix. \textit{Note that LDA assumes the same covariance matrix for both distributions.}
+
+\begin{enumerate}
+\item Let $\pi_1 = P(Y_i = 1)$ be the marginal probability that $Y = 1$ in the population, and let $\pi_0 = 1 - \pi_1$. Use Bayes' theorem and \eqref{eq:lda} to show that, if the LDA model assumptions are correct, $P(Y_i = 1 | \bm{X}_i)$ is given by
+\begin{align*}
+P(Y_i = 1 | \bm{X}_i) = \dfrac{\pi_1 \exp \{-\frac{1}{2} (\bm{X}_i - \bm{\mu}_1)^T \bm{\Sigma}^{-1} (\bm{X}_i - \bm{\mu}_1) \}}{\pi_1 \exp \{-\frac{1}{2} (\bm{X}_i - \bm{\mu}_1)^T \bm{\Sigma}^{-1} (\bm{X}_i - \bm{\mu}_1) \} + \pi_0 \exp \{-\frac{1}{2} (\bm{X}_i - \bm{\mu}_0)^T \bm{\Sigma}^{-1} (\bm{X}_i - \bm{\mu}_0) \}}.
+\end{align*}
+
+\item Suppose we observe data $(\bm{X}_1, Y_1), ..., (\bm{X}_n, Y_n)$. We fit the LDA model, estimating $\pi_1, \bm{\mu}_0, \bm{\mu}_1$, and $\bm{\Sigma}$. The covariance $\bm{\Sigma}$ is estimated with a pooled sample estimate:
+\begin{align*}
+\widehat{\bm{\Sigma}} = \frac{1}{n-2} \sum \limits_{i=1}^n (\bm{X}_i - \widehat{\bm{\mu}}_{Y_i}) (\bm{X}_i - \widehat{\bm{\mu}}_{Y_i})^T ,
+\end{align*}
+where $\widehat{\bm{\mu}}_{Y_i} = \widehat{\bm{\mu}}_1$ if $Y_i = 1$, and $\widehat{\bm{\mu}}_{Y_i} = \widehat{\bm{\mu}}_0$ if $Y_i = 0$.
+
+In this question, we will fit the model to the \texttt{dengue} data from class: 
+\begin{verbatim}
+dengue <- read.csv("https://sta711-s23.github.io/homework/dengue.csv")
+\end{verbatim}
+Let $Y_i$ be a patient's dengue status, and let $\bm{X}_i = (WBC_i, PLT_i)$ be a patient's white blood cell count and platelet count. Fit the LDA model \eqref{eq:lda} to this dengue data, and report the estimates $\widehat{\pi}_1$, $\widehat{\bm{\mu}}_0$, $\widehat{\bm{\mu}}_1$, and $\widehat{\bm{\Sigma}}$.
+
+\item Now fit a logistic regression model with dengue status as the response, and WBC and PLT as predictors. Report your fitted coefficients $\widehat{\bm{\beta}}$ for the logistic regression model.
+
+\item In R, make a plot showing the relationship between the predicted probabilities $\widehat{P}(Y_i = 1 | \bm{X}_i)$ from logistic regression, and the predicted probabilities $\widehat{P}(Y_i = 1 | \bm{X}_i)$ from LDA. Do the two methods give similar predictions?
+
+\item It turns out that LDA is the ``same'' as logistic regression, when the LDA assumptions hold. Show that if \eqref{eq:lda} holds, then 
+\begin{align*}
+\log \left( \dfrac{P(Y_i = 1 | \bm{X})}{P(Y_i = 0 | \bm{X}_i)} \right) = \log \left( \dfrac{\pi_1}{\pi_0} \right) - \frac{1}{2} (\bm{\mu}_1 - \bm{\mu}_0)^T \bm{\Sigma}^{-1} (\bm{\mu}_1 + \bm{\mu}_0) + (\bm{\mu}_1 - \bm{\mu}_0)^T \bm{\Sigma}^{-1} \bm{X}_i.
+\end{align*}
+Conclude that if the LDA assumptions hold, then the log-odds are a linear function of the covariates $\bm{X}$ (which is what we assume in logistic regression!).
+\end{enumerate}
+
+\subsection*{LDA vs. logistic regression}
+If LDA is the ``same'' as logistic regression, why do both methods exist? Several reasons:
+\begin{itemize}
+\item LDA assumes the data come from multivariate normal distributions. If this parametric assumption doesn't hold (and it usually doesn't), then logistic regression and LDA are \textit{not} the same, and logistic regression is more flexible.
+
+\item Fitting LDA is computationally much easier than fitting logistic regression. LDA just requires estimates $\widehat{\pi}_1$, $\widehat{\bm{\mu}}_0$, $\widehat{\bm{\mu}}_1$, and $\widehat{\bm{\Sigma}}$, all of which have a closed form. This avoids iterative methods like Fisher scoring.
+
+\item If the LDA assumptions hold, then LDA and logistic regression are both trying to estimate the same parameters. But, since different estimation methods are used, the fitted probabilities are slightly different.
+\end{itemize}
+In the final part of this assignment, you will compare LDA and logistic regression in a small simulation. Suppose that $\bm{X}_i \in \mathbb{R}^2$, and \eqref{eq:lda} holds, with $\pi_1 = 0.5$, $\bm{\mu}_0 = (0, 0)^T$, $\bm{\mu}_1 = (0.5, 0.5)^T$, and $\bm{\Sigma} = \begin{pmatrix}
+1 & 0 \\ 0 & 1
+\end{pmatrix}$.
+
+\begin{enumerate}
+\item[6.]  In R, generate 10 training samples $(\bm{X}_1, Y_1),...,(\bm{X}_{10}, Y_{10})$ from the LDA model. \textbf{Hint:} sample $Y$ first, then sample $\bm{X}|Y$ from the appropriate multivariate normal distribution.
+
+\item[7.] Using your training sample from question 6, fit LDA and logistic regression models. 
+
+\item[8.] Now generate 1000 test samples $(\bm{X}_1, Y_1),...,(\bm{X}_{1000}, Y_{1000})$ from the LDA model. Using your fitted models from question 6 (do not re-fit the models on the test data!), calculate (a) the estimated probabilities $\widehat{P}(Y_i = 1 | \bm{X}_i)$ using the fitted LDA model, (b) the estimated probabilities $\widehat{P}(Y_i = 1 | \bm{X}_i)$ using the fitted logistic regression model, and (c) the true probabilities $P(Y_i = 1 | \bm{X}_i)$ for each point (using the true parameters $\pi_1$, $\bm{\mu}_0$, $\bm{\mu}_1$, and $\bm{\Sigma}$).
+
+\item[9.] Which predictions (LDA or logistic regression) are closer, on average, to the true probabilities for your test data?
+
+\item[10.] Repeat questions 6 -- 9 200 times. When the LDA assumptions hold and the number of training samples is $n_{train} = 10$, which method -- LDA or logistic regression -- does a better job estimating the true probabilities?
+
+\item[11.] Repeat question 10 for different training sizes $n_{train}$. How does the relative performance of LDA and logistic regression change as we increase $n_{train}$? Make a plot summarizing the performance of LDA and logistic regression at each value of $n_{train}$.
+\end{enumerate}
+
+\end{document}

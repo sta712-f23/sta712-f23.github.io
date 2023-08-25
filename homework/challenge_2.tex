@@ -1,0 +1,125 @@
+\documentclass[11pt]{article}
+\usepackage{url}
+\usepackage{alltt}
+\usepackage{bm}
+\linespread{1}
+\textwidth 6.5in
+\oddsidemargin 0.in
+\addtolength{\topmargin}{-1in}
+\addtolength{\textheight}{2in}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+
+
+\begin{center}
+\Large
+STA 712 Challenge Assignment 2: Neural Networks and Logistic Regression\\
+\normalsize
+\vspace{5mm}
+\end{center}
+
+\noindent \textbf{Due:} By Friday, November 10 at 12:00pm (noon) on Canvas.\\
+
+\noindent \textbf{Instructions:} 
+\begin{itemize}
+\item Submit your work as a single PDF. Use \TeX to type and format any math and equations, either with a \LaTeX editor (Overleaf, Texmaker, etc.), or directly in an R Markdown or Quarto document. Include all R code needed to reproduce your results in your submission.
+\item You are welcome to work with others on this assignment, but you must submit your own work.
+\item The goal of this assignment is for you to learn about a topic beyond the core material covered in class. If you get stuck, I am happy to chat over email or in office hours.
+\item You can probably find the answers to many of these questions online. It is ok to use online resources! But make sure to show all your work in your final submission.
+\end{itemize}
+
+\section*{Introduction}
+
+Logistic regression is one of the most widely used tools for predicting a binary response. However, logistic regression is limited by the assumption that the log odds are a \textit{linear} function of the predictors. What if we want to model nonlinear relationships? Transformations are one option, but it can be hard to choose the right transformations with high-dimensional data.\\
+
+\noindent Another option is \textit{neural networks}, a popular prediction/classification method which can be used to fit more complex relationships. It also turns out that logistic regression can be represented as a special case of a \textit{feedforward} neural network (the simplest type), so neural networks provide a nice generalization of logistic regression.\\
+
+\noindent The goal of this assignment is to introduce you to neural networks, show how logistic regression can be viewed as a simple network, and experiment with fitting more complicated models.
+
+\subsection*{Background reading:} This assignment requires you to learn quite a bit of new information that isn't covered in class. Here I provide some references to get started, but you may need to do some research beyond these references.
+
+\begin{itemize}
+\item To get started and see an overview of neural networks, skim Chapter 1 of \textit{Neural Networks and Deep Learning}, a free online book by Michael Nielsen available here: \url{http://neuralnetworksanddeeplearning.com/index.html}
+\item I also recommend the 3Blue1Brown YouTube videos on neural networks: \url{https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi}
+\item You may also find these slides from a CMU course on machine learning helpful, in particular lecture 11 and lecture 14: \url{http://www.cs.cmu.edu/~mgormley/courses/10601-s18/slides/}
+\item For an introduction to performance metrics like sensitivity, specificity, and ROC curves, see \textit{An Introduction to Statistical Learning} (James, Witten, Hastie, and Tibshirani), available for free online: \url{https://www.statlearning.com/}
+\end{itemize}
+
+\subsection*{Fitting a neural network:} There are many options for fitting a neural network. If you have never fit a network before, I suggest using one of the following:
+
+\begin{itemize}
+\item The \texttt{neuralnet} package in R (\url{https://cran.r-project.org/web/packages/neuralnet/})
+\item TensorFlow for R, using Keras (\url{https://tensorflow.rstudio.com/})
+\item PyTorch, in Python (\url{https://pytorch.org/tutorials/})
+\end{itemize}
+
+\section*{Questions}
+
+\subsection*{Logistic regression assumptions satisfied}
+
+To begin, let's simulate data which satisfies the logistic regression assumptions, and fit both a logistic regression model and a neural network.
+
+\begin{enumerate}
+\item Simulate data $(\bm{X}_1, Y_1),...,(\bm{X}_{1000}, Y_{1000})$ from the following model:
+\begin{align*}
+Y_i &\sim Bernoulli(p_i) \\
+\log \left( \frac{p_i}{1 - p_i} \right) &= -0.5 + 0.5 X_{i,1} - 0.2 X_{i,2} + X_{i,3} \\
+(X_{i,1}, X_{i,2}, X_{i,3})^T &\overset{iid}{\sim} N(\bm{0}, \bm{I})
+\end{align*}
+
+\item Using your simulated data from question 1, fit the following logistic regression model using the \verb;glm; function in R, and report the estimated coefficients:
+\begin{align}
+\begin{split}
+Y_i &\sim Bernoulli(p_i) \\
+\log \left( \frac{p_i}{1 - p_i} \right) &= \beta_0 + \beta_1 X_{i,1} + \beta_2 X_{i,2} + \beta_3 X_{i,3}.
+\end{split}
+\end{align}
+(Because the model is correct, $\widehat{\bm{\beta}}$ should be close to $(-0.5, 0.5, -0.2, 1)^T$).
+
+\item Now we want to fit the model with a neural network. Draw a network diagram (that is, draw the nodes in each layer of the network, and the connections between the nodes), showing how the logistic regression model from (1) can be represented as a feedforward neural network. Specify the input layer, output layer, the weights, any activation functions, and the loss function used in training.
+
+\item Fit the neural network in question 3 (using software of your choice). Report the fitted weights and biases; these should be similar to the estimated coefficients from question 2.
+
+\item What optimization method did you use to fit the network in question 4? Compare and contrast this optimization method with Fisher scoring.
+
+\item Make a plot comparing the predicted probabilities $\widehat{p}_i$ from logistic regression to the true probabilities $p_i$ for each point. Also plot the predicted probabilities from the neural network against the true probabilities $p_i$.
+\end{enumerate}
+
+\newpage
+
+\subsection*{Logistic regression assumptions not satisfied}
+
+Now let's break the logistic regression assumptions! 
+
+\begin{enumerate}
+\item[7.] Simulate data $(\bm{X}_1, Y_1),...,(\bm{X}_{1000}, Y_{1000})$ from the following model:
+\begin{align*}
+Y_i &\sim Bernoulli(p_i) \\
+\log \left( \frac{p_i}{1 - p_i} \right) &= -0.5 + 0.2 X_{i,1} + 0.1 X_{i,1}^2 - 0.01 X_{i,1}^3 - 0.2 \sin(X_{i,2}) + \log(X_{i,3}^2) \\
+(X_{i,1}, X_{i,2}, X_{i,3})^T &\overset{iid}{\sim} N(\bm{0}, \bm{I})
+\end{align*}
+
+\item[8.] Using the simulated data from question 7, fit the logistic regression model from equation (1). (This logistic regression model is \textit{not} the correct model). Plot the predicted probabilities $\widehat{p}_i$ from your fitted model against the true probabilities $p_i$. Does the model do a good job?
+
+\item[9.] Now let's fit a neural network. But this time, add a hidden layer (hidden layers allow the network to better capture non-linearity). Draw a network diagram for your new network, and plot the predicted probabilities $\widehat{p}_i$ against the true probabilities $p_i$. Did adding the hidden layer improve your estimated probabilities?
+
+\item[10.] Adding hidden layers makes the neural network more flexible. What are some downsides of making the network architecture more complex?
+\end{enumerate}
+
+\subsection*{Working with real data}
+
+\begin{enumerate}
+\item[11.] Choose a real dataset with a binary outcome (either a dataset we have previously used in 711/712, or another dataset you are interested in modeling). Briefly describe the data, the response variable, and the explanatory variables you will use.
+
+\item[12.] Randomly split the data into a \textit{training} set which contains 60\% of the observations, and a \textit{test} set which contains the remaining 40\% of the observations. (We will fit our models on the training set, then evaluate their performance on the test set. This helps to avoid issues with overfitting).
+
+\item[13.] Fit a linear regression model on the training data, then assess the performance of the fitted logistic regression model on the test data using an ROC curve. Report the area under the curve (AUC).
+
+\item[14.] Fit a neural network on the training data (you may choose the architecture), then assess its performance on the test data using an ROC curve. Report the AUC, and compare with question 13. Which model performed better?
+\end{enumerate}
+
+
+\end{document}
