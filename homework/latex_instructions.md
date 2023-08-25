@@ -12,7 +12,7 @@ In STA 712, you will use LaTeX to produce your project reports. To help prepare 
 
 ### Using Overleaf for HW assignments
 
-1. Download the LaTeX homework template from the course webpage
+1. Download the [LaTeX homework template](sta712-f23.github.io/homework/hw_template.tex) from the course webpage
 2. Create a *free* account on Overleaf
 3. Create a new project for your STA 712 homework assignments
 4. Upload the homework template, and change the file name (e.g. "hw_1.tex"). Make sure to keep the .tex extension!
