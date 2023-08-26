@@ -1,0 +1,201 @@
+---
+title: "Lecture 1"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: visual
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include=F}
+library(tidyverse)
+library(statmod)
+dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
+```
+
+## Logistic regression recap
+
+Recall the dengue data from last semester:
+
+* Data on Vietnamese children admitted to hospital with possible dengue fever
+* Variables include:
+  * Age
+  * White blood cell count (WBC)
+  * Platelet count (PLT)
+  * Dengue status (0 = no dengue, 1 = dengue)
+  
+## Logistic regression recap
+
+I want to model dengue status, with Age, WBC, and PLT as explanatory variables.
+
+What does my model look like?
+
+## Logistic regression recap
+
+$$Y_i \sim Bernoulli(p_i)$$
+
+$$\log \left( \frac{p_i}{1 - p_i} \right) = \beta_0 + \beta_1 Age_i + \beta_2 WBC_i + \beta_3 PLT_i$$
+
+**Question:** How do I interpret a regression coefficient (e.g. $\beta_1$)?
+
+## Logistic regression recap
+
+$$Y_i \sim Bernoulli(p_i)$$
+
+$$\log \left( \frac{p_i}{1 - p_i} \right) = \beta_0 + \beta_1 Age_i + \beta_2 WBC_i + \beta_3 PLT_i$$
+
+**Question:** What assumptions does this model make?
+
+## Logistic regression recap
+
+Quantile residual plot:
+
+```{r, echo=F}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, 
+          family = binomial)
+dengue |>
+  mutate(resids = qresid(m1)) |>
+  ggplot(aes(x = Age, y = resids)) +
+  geom_point() +
+  geom_smooth(se=F) +
+  labs(x = "Age", y = "Quantile residuals") +
+  theme_bw() +
+  theme(text = element_text(size = 15))
+```
+
+
+## Logistic regression recap
+
+$$Y_i \sim Bernoulli(p_i)$$
+
+$$\log \left( \frac{p_i}{1 - p_i} \right) = \beta_0 + \beta_1 Age_i + \beta_2 WBC_i + \beta_3 PLT_i$$
+
+**Question:** I want to know whether there is relationship between Age and Dengue status, after accounting for WBC and PLT. How can I address this question?
+
+## Logistic regression recap
+
+```{r}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, 
+          family = binomial)
+summary(m1)
+```
+
+
+## Logistic regression recap
+
+$$Y_i \sim Bernoulli(p_i)$$
+
+$$\log \left( \frac{p_i}{1 - p_i} \right) = \beta_0 + \beta_1 Age_i + \beta_2 WBC_i + \beta_3 PLT_i$$
+
+**Question:** Suppose now I want to test $H_0: \beta_2 = \beta_3 = 0$. How do I carry out the likelihood ratio test?
+
+## Logistic regression recap
+
+```{r, echo=T}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, family = binomial)
+m1$deviance
+```
+
+```{r, echo=T}
+m2 <- glm(Dengue ~ Age, data = dengue, family = binomial)
+m2$deviance
+```
+
+Test statistic =
+
+## Logistic regression recap
+
+```{r, echo=T}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, family = binomial)
+m1$deviance
+```
+
+```{r, echo=T}
+m2 <- glm(Dengue ~ Age, data = dengue, family = binomial)
+m2$deviance
+```
+
+Test statistic = $deviance_{reduced} - deviance_{full} = 1071.6$
+
+How do I calculate a p-value?
+
+## Logistic regression recap
+
+```{r, echo=T}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, family = binomial)
+m1$deviance
+```
+
+```{r, echo=T}
+m2 <- glm(Dengue ~ Age, data = dengue, family = binomial)
+m2$deviance
+```
+
+Test statistic = $deviance_{reduced} - deviance_{full} = 1071.6$
+
+```{r}
+pchisq(1071.6, df=2, lower.tail=F)
+```
+
+## Logistic regression recap
+
+$$Y_i \sim Bernoulli(p_i)$$
+
+$$\log \left( \frac{p_i}{1 - p_i} \right) = \beta_0 + \beta_1 Age_i + \beta_2 WBC_i + \beta_3 PLT_i$$
+
+**Question:** The researchers are interested in whether their model does a good job identifying patients with dengue. Do our hypothesis tests address that question?
+
+
+## Rough course plan
+
+* Logistic regression recap
+* Prediction and model selection
+* Supplementary skills (research papers, SAPs, simulation)
+* Poisson regression and EDMs
+* Mis-specified models (overdispersion, zero-inflation, etc.)
+* Correlated data
+
+## Course components
+
+* Homework assignments (graded on completion)
+* Challenge assignments (graded on mastery)
+* Data analysis projects (graded on mastery)
+* Semester research project (graded on mastery)
+  * Group project
+  * Involves written report, final presentation, and intermediate check-points
+  * Due next Monday: group members and tentative topic
+  
+## Reading a research paper
+
+Research papers in the sciences and social sciences typically contain:
+
+* Abstract
+* Introduction
+* Methods
+* Results
+* Discussion
+* Conclusion
+
+## Reading a research paper
+
+* **Abstract:** overview and key points
+* **Introduction:** motivation, background, overview of work
+* **Methods:** details on study design, data, statistical analysis
+* **Results:** summary of results, including figures, tables, p-values, etc.
+* **Discussion:** discussion of results in context of research question
+* **Conclusion:** short summary of paper and key results; connection to broader research
+
+## Class activity
+
+Reading the original dengue paper:
+
+[https://sta712-f23.github.io/class_activities/ca_1.pdf](https://sta712-f23.github.io/class_activities/ca_1.pdf)
+
+For next class: 
+
+* finish reading the paper and working through the class activity
+* we will discuss the paper on Wednesday
+
