@@ -1,0 +1,159 @@
+---
+title: "Lecture 2"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: visual
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include=F}
+library(tidyverse)
+titanic <- read.csv("https://sta214-f22.github.io/labs/Titanic.csv")
+
+titanic <- titanic |>
+  drop_na() |>
+  mutate(Pclass = factor(Pclass, levels = c(3, 2, 1)))
+```
+
+
+## Dengue paper recap
+
+What is the main goal of the research study?
+
+## Dengue paper recap
+
+What model do the researchers use to predict dengue status?
+
+## Dengue paper recap
+
+How did the researchers choose their final model?
+
+## Dengue paper recap
+
+How did the researchers assess the performance of their model?
+
+## Types of research questions
+
+* What is the relationship between the explanatory variable(s) and the response?
+* What is a "reasonable range" for a parameter in this relationship?
+* Do we have strong evidence for a relationship between these variables?
+* How well can we predict the response / new observations?
+* What model should we use to predict the response / which variables are most important?
+
+
+## Our next steps
+
+* Assessing binary predictions
+* Model selection
+* Choosing an analysis method and designing a statistical analysis plan
+
+## Titanic data
+
+Recall the Titanic data from last semester:
+
+* Data on 891 passengers
+* Variables include:
+  * Survival
+  * Sex
+  * Age
+  * Passenger class
+
+## Modeling Titanic data
+
+Suppose we fit the following model:
+
+$$Survived_i \sim Bernoulli(p_i)$$
+$$\log \left( \frac{p_i}{1 - p_i} \right) = \beta_0 + \beta_1 Male_i + \beta_2 Age_i + \beta_3 Class2_i + \beta_4 Class1_i$$
+How should we assess predictive ability of the model?
+
+## Making binary predictions
+
+* For each passenger, we calculate $\widehat{p}_i$ (estimated probability of survival)
+* But, we want to predict *which* passengers actually survive
+
+**Question:** How do we turn $\widehat{p}_i$ into a binary prediction of survival / no survival?
+
+## Confusion matrix
+
+```{r}
+m1 <- glm(Survived ~ Sex + Age + Pclass, data = titanic, 
+          family = binomial)
+
+table("Predicted" = ifelse(m1$fitted.values > 0.5, 1, 0),
+      "Observed" = m1$y)
+```
+
+**Question:** Did we do a good job at predicting survival?
+
+## Why a threshold of 0.5?
+
+## Another confusion matrix
+
+Researchers fit a model for the dengue data and produce the following confusion matrix:
+
+| | | Observed | |
+| --- | --- | --- | --- |
+| | | $Y = 0$ | $Y = 1$ |
+|**Predicted** | $\widehat{Y} = 0$ | 3957 | 1631 |
+| | $\widehat{Y} = 1$ | 66 | 66 |
+
+The accuracy is 70%. Is the model doing a good job?
+
+## Changing the threshold
+
+Threshold of 0.3:
+
+```{r}
+table("Predicted" = ifelse(m1$fitted.values > 0.3, 1, 0),
+      "Observed" = m1$y)
+```
+
+Threshold of 0.7:
+
+```{r}
+table("Predicted" = ifelse(m1$fitted.values > 0.7, 1, 0),
+      "Observed" = m1$y)
+```
+
+How do sensitivity and specificity change?
+
+## ROC curve
+
+```{r echo=F, message=F, warning=F, fig.align='center', fig.width=7, fig.height=6}
+library(ROCR)
+pred <- prediction(m1$fitted.values, titanic$Survived)
+perf <- performance(pred,"tpr","fpr")
+
+# performance(pred, "auc")@y.values # 0.858
+
+data.frame(fpr = perf@x.values[[1]],
+           tpr = perf@y.values[[1]]) |>
+  ggplot(aes(x = fpr, y = tpr)) +
+  geom_line(lwd=1.5) +
+  geom_abline(slope = 1, intercept = 0, lty = 2,
+              lwd = 1.5) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic() +
+  theme(text = element_text(size = 20))
+```
+
+## Area under the curve (AUC)
+
+## Summary
+
+* Threshold predicted probabilities to get binary predictions
+* Performance metrics like accuracy, sensitivity, and specificity can be calculated from a confusion matrix
+* A threshold of 0.5 maximizes accuracy (in the population)
+* As threshold increases, sensitivity decreases and specificity increases
+* ROC curves plot the trade-off between sensitivity and specificity
+
+
+
+
+
+

@@ -11,7 +11,8 @@ August 28
 : [Assignment list (including challenges and projects)](https://sta712-f23.github.io/assignment_list/)
 
 August 30
-: Prediction
+: Assessing binary predictions
+  : [slides (html)](https://sta712-f23.github.io/slides/lecture_2.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_2.pdf)
 
 September 1
 : Prediction
