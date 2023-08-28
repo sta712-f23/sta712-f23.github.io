@@ -1,0 +1,141 @@
+---
+title: "Class Activity"
+output: 
+  tufte::tufte_html:
+    css: "lab.css"
+    tufte_variant: "envisioned"
+    highlight: pygments
+link-citations: yes
+---
+
+**Instructions:** Work in groups to run the code and answer the questions below.
+
+## Comparing model performance: dengue data
+
+In the dengue study, the researchers ultimately selected a logistic regression model with three explanatory variables: age, white blood cell count, and platelet count. In this class activity, you will begin to explore how this model compares with logistic regression models that include additional explanatory variables. In the process, we will discuss some pitfalls when comparing models.
+
+To begin, load the dengue data and some helpful packages into R:
+
+```{r, eval=F}
+library(tidyverse)
+library(ROCR)
+dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
+```
+
+Then answer the following questions.
+
+1. Run the following code to fit two logistic regression models; one with Age, WBC, and PLT as the explanatory variables, and a second model which also includes BMI, HCT (hematocrit) and Temperature.
+
+```{r, eval=F}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue,
+          family = binomial)
+m2 <- glm(Dengue ~  Age + WBC + PLT + BMI + HCT + Temperature,
+          data = dengue, family = binomial)
+```
+
+2. Perform a likelihood ratio test to compare the two models. What is the change in deviance? Based solely on the likelihood ratio test, would you prefer the full or the reduced model?
+
+3. Now let's compare the predictive ability of our two models. Run the following code to plot ROC curves and calculate the AUC for the two models.
+
+```{r, eval=F}
+# calculating performance metrics using the ROCR package
+
+## TPR vs. FPR for model 1
+pred1 <- prediction(m1$fitted.values, m1$y)
+perf1 <- performance(pred1,"tpr","fpr")
+
+## TPR vs. FPR for model 2
+pred2 <- prediction(m2$fitted.values, m2$y)
+perf2 <- performance(pred2,"tpr","fpr")
+
+## Plot both ROC curves on the same graph
+data.frame(fpr = c(perf1@x.values[[1]], perf2@x.values[[1]]),
+           tpr = c(perf1@y.values[[1]], perf2@y.values[[1]]),
+           model = c(rep("Model 1", length(perf1@x.values[[1]])),
+                     rep("Model 2", length(perf2@x.values[[1]])))) |>
+  ggplot(aes(x = fpr, y = tpr, color = model)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, lty = 2) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic()
+
+## calculate AUC values
+performance(pred1, "auc")@y.values # AUC for model 1
+performance(pred2, "auc")@y.values # AUC for model 2
+```
+
+4. Compare the ROC curves and the AUCs for the two models. 
+
+5. The researchers' goal is to build a simple, interpretable model that predicts dengue well. Which of the two models should they use?
+
+## Comparing model performance with simulated data
+
+With the dengue data above, our likelihood ratio test rejected $H_0$ in favor of the full model, and the AUC of the full model was slightly higher. In this section of the activity, you will simulate data and see that even when a more complicated model is incorrect (the true model is a reduced model), the larger model can have a larger AUC.
+
+6. Run the following code to simulate data $(X_i, Y_i)$ with $X_i = (X_{1,i},...,X_{6,i}) \in \mathbb{R}^6$, $Y_i \sim Bernoulli(p_i)$, and $\log \left(\frac{p_i}{1 - p_i}  \right) = -0.5 + 0.2 X_{1,i} + 0.2 X_{2,i} + 0.2 X_{3,i}$. (In other words, the true coefficients for $X_4$, $X_5$, and $X_6$ are all 0).
+
+```{r, eval=F}
+set.seed(712)
+
+n <- 1000
+d <- 6
+X <- matrix(rnorm(d*n), nrow=n)
+p <- exp(-0.5 + X %*% c(0.2, 0.2, 0.2, 0, 0, 0))/(
+  1 + exp(-0.5 + X %*% c(0.2, 0.2, 0.2, 0, 0, 0))
+)
+
+y <- rbinom(n, 1, p)
+```
+
+7. Now run the following code to fit two models: the *true* model (containing only the first 3 explanatory variables), and a full model containing all 6 variables.
+
+```{r, eval=F}
+m1 <- glm(y ~ X[,1:3], family = binomial)
+m2 <- glm(y ~ X, family = binomial)
+```
+
+8. Report the deviances for the two models. Explain why model 2 *must* have a smaller deviance than model 1 (*when calculated on the data used to fit the model*).
+
+9. Which model has a higher AUC? Why might this happen (even though model 1 is correct)?
+
+## Model performance on *new* data
+
+In question 8, you explained why model 2 had a smaller deviance, *when calculated on the data used to fit the model*. What about when we apply our model to *new* data?
+
+10. Run the following code to simulate 1000 new samples, from the same distribution used in question 6.
+
+```{r, eval=F}
+X_new <- matrix(rnorm(d*n), nrow=n)
+p_new <- exp(-0.5 + X_new %*% c(0.2, 0.2, 0.2, 0, 0, 0))/(
+  1 + exp(-0.5 + X_new %*% c(0.2, 0.2, 0.2, 0, 0, 0))
+)
+
+y_new <- rbinom(n, 1, p_new)
+```
+
+11. Now run the following code to calculate predictions from model 1 and model 2 on this new data, and calculate deviances on the new data. (Remember that for binary logistic regression, deviance = $-2 \log L$).
+
+```{r, eval=F}
+# predictions on new observations
+phat_m1 <- exp(m1$coefficients[1] + X_new[,1:3] %*% m1$coefficients[2:4])/(
+  1 + exp(m1$coefficients[1] + X_new[,1:3] %*% m1$coefficients[2:4])
+)
+
+phat_m2 <- exp(m2$coefficients[1] + X_new %*% m2$coefficients[2:7])/(
+  1 + exp(m2$coefficients[1] + X_new %*% m2$coefficients[2:7])
+)
+
+# new deviance for model 1
+-2*sum(y_new*log(phat_m1) + (1-y_new)*log(1 - phat_m1))
+
+# new deviance for model 2
+-2*sum(y_new*log(phat_m2) + (1-y_new)*log(1 - phat_m2))
+```
+
+12. Which model has a smaller deviance?
+
+13. Explain why the deviances in question 11 are larger than the deviances in question 8.
+
+
+

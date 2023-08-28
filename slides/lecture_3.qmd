@@ -1,0 +1,219 @@
+---
+title: "Lecture 3"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: visual
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include=F}
+library(tidyverse)
+library(ROCR)
+dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
+```
+
+## Semester research project
+
+**Goal:** Learn and apply a new topic (beyond what we cover in 711/712)
+
+Due Monday (your group should collectively email me):
+
+* Group members and tentative roles
+* Tentative topic (ok if this changes for the first few weeks). Include:
+  * A couple references
+  * Why you want to explore this topic
+
+
+## Class activity
+
+## Class activity: dengue data
+
+```{r, echo=T}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue,
+          family = binomial)
+m2 <- glm(Dengue ~  Age + WBC + PLT + BMI + HCT + Temperature,
+          data = dengue, family = binomial)
+```
+
+How do I perform a LRT to compare the two models?
+
+## Class activity: dengue data
+
+```{r, echo=T}
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue,
+          family = binomial)
+m2 <- glm(Dengue ~  Age + WBC + PLT + BMI + HCT + Temperature,
+          data = dengue, family = binomial)
+
+pchisq(m1$deviance - m2$deviance, 3, lower.tail=F)
+```
+
+Which model would the LRT choose?
+
+## Class activity: dengue data
+
+```{r, fig.align='center', fig.width=7, fig.height=4, echo=F}
+# calculating performance metrics using the ROCR package
+
+## TPR vs. FPR for model 1
+pred1 <- prediction(m1$fitted.values, m1$y)
+perf1 <- performance(pred1,"tpr","fpr")
+
+## TPR vs. FPR for model 2
+pred2 <- prediction(m2$fitted.values, m2$y)
+perf2 <- performance(pred2,"tpr","fpr")
+
+## Plot both ROC curves on the same graph
+data.frame(fpr = c(perf1@x.values[[1]], perf2@x.values[[1]]),
+           tpr = c(perf1@y.values[[1]], perf2@y.values[[1]]),
+           model = c(rep("Model 1", length(perf1@x.values[[1]])),
+                     rep("Model 2", length(perf2@x.values[[1]])))) |>
+  ggplot(aes(x = fpr, y = tpr, color = model)) +
+  geom_line(lwd=1) +
+  geom_abline(slope = 1, intercept = 0, lty = 2, lwd=1) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic() +
+  theme(text = element_text(size = 15))
+```
+
+Which model would you choose?
+
+## Class activity: simulated data
+
+```{r, include=F}
+set.seed(712)
+
+n <- 1000
+d <- 6
+X <- matrix(rnorm(d*n), nrow=n)
+p <- exp(-0.5 + X %*% c(0.2, 0.2, 0.2, 0, 0, 0))/(
+  1 + exp(-0.5 + X %*% c(0.2, 0.2, 0.2, 0, 0, 0))
+)
+
+y <- rbinom(n, 1, p)
+```
+
+```{r}
+m1 <- glm(y ~ X[,1:3], family = binomial)
+m2 <- glm(y ~ X, family = binomial)
+
+m1$deviance
+m2$deviance
+```
+
+Why *must* the second model have a smaller deviance (on the data used to fit the model)?
+
+## Class activity: simulated data
+
+```{r}
+pred1 <- prediction(m1$fitted.values, m1$y)
+pred2 <- prediction(m2$fitted.values, m2$y)
+
+performance(pred1, "auc")@y.values
+performance(pred2, "auc")@y.values
+```
+
+Why might model 2 have a greater AUC?
+
+## Class activity: new simulated data
+
+```{r, include=F}
+X_new <- matrix(rnorm(d*n), nrow=n)
+p_new <- exp(-0.5 + X_new %*% c(0.2, 0.2, 0.2, 0, 0, 0))/(
+  1 + exp(-0.5 + X_new %*% c(0.2, 0.2, 0.2, 0, 0, 0))
+)
+
+y_new <- rbinom(n, 1, p_new)
+```
+
+```{r}
+# predictions on new observations
+phat_m1 <- exp(m1$coefficients[1] + X_new[,1:3] %*% m1$coefficients[2:4])/(
+  1 + exp(m1$coefficients[1] + X_new[,1:3] %*% m1$coefficients[2:4])
+)
+
+phat_m2 <- exp(m2$coefficients[1] + X_new %*% m2$coefficients[2:7])/(
+  1 + exp(m2$coefficients[1] + X_new %*% m2$coefficients[2:7])
+)
+
+# new deviance for model 1
+-2*sum(y_new*log(phat_m1) + (1-y_new)*log(1 - phat_m1))
+
+# new deviance for model 2
+-2*sum(y_new*log(phat_m2) + (1-y_new)*log(1 - phat_m2))
+```
+
+Why are the deviances higher than for the training data?
+
+## Key take-aways
+
+* When evaluated on the *training* data, a large model will have a lower deviance than any of its sub-models
+  * Prediction metrics like AUC are also often higher, even if a reduced model is correct
+* Often prefer the simpler model (easier to interpret, less variability, etc.) if model performance is similar, *even if* a hypothesis test would choose the larger model
+* We expect model performance (deviance, AUC, etc.) to be better on training data than on a new test set
+
+## Training vs. testing data
+
+* Models generally perform better on their *training* data (the data used to fit the model) than on new (*test*) data.
+* When evaluated only on training data, larger models tend to look better
+
+How should we assess and compare model performance if we can't sample new data (e.g., in the dengue scenario)?
+
+## Data splitting
+
+How should we assess and compare model performance if we can't sample new data (e.g., in the dengue scenario)?
+
+* Randomly divide available data into two groups: training and test
+  * E.g. 70% training, 30% test
+* Fit the model on the training sample
+* Evaluate the model on the test sample
+
+## Data splitting with the dengue data
+
+```{r}
+# create training and test splits
+train_sample <- sample(1:nrow(dengue), 0.7*nrow(dengue), replace = F)
+dengue_train <- dengue[train_sample,]
+dengue_test <- dengue[setdiff(1:nrow(dengue), train_sample),]
+```
+
+```{r}
+# fit the model
+m1_train <- glm(Dengue ~ Age + WBC + PLT, data = dengue_train, 
+                family = binomial)
+
+# predict on test data
+test_predictions <- predict(m1_train, newdata = dengue_test,
+                            type = "response")
+pred <- prediction(test_predictions,dengue_test$Dengue)
+performance(pred, "auc")@y.values
+```
+
+Are there any potential issues with this strategy?
+
+## Downsides of train/test splits
+
+* We get less data for training
+* Performance measure depends on the (random) split
+
+Alternative: cross-validation
+
+## Cross validation
+
+* Divide data into $k$ groups (*folds*)
+* For each fold $i = 1,...,k$:
+  * Train model on the remaining $k-1$ folds
+  * Evaluate on fold $i$
+* Average performance across the $k$ folds
+
+## Key take-aways
+
+* Don't choose a model based solely on training performance
+  * Will bias towards more complex models
+* Train/test splits and cross-validation give better estimates of model performance
+
