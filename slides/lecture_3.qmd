@@ -3,7 +3,7 @@ title: "Lecture 3"
 format: 
   revealjs:
     theme: theme.scss
-editor: visual
+editor: source
 execute:
   echo: true
 editor_options: 
@@ -22,13 +22,17 @@ dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
 
 Due Monday (your group should collectively email me):
 
-* Group members and tentative roles
-* Tentative topic (ok if this changes for the first few weeks). Include:
-  * A couple references
-  * Why you want to explore this topic
-
+-   Group members and tentative roles
+-   Tentative topic (ok if this changes for the first few weeks). Include:
+    -   A couple references
+    -   Why you want to explore this topic
 
 ## Class activity
+
+* Take some time to work through the class activity
+* You are welcome to work in groups
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_3.html](https://sta712-f23.github.io/class_activities/ca_lecture_3.html)
 
 ## Class activity: dengue data
 
@@ -152,15 +156,15 @@ Why are the deviances higher than for the training data?
 
 ## Key take-aways
 
-* When evaluated on the *training* data, a large model will have a lower deviance than any of its sub-models
-  * Prediction metrics like AUC are also often higher, even if a reduced model is correct
-* Often prefer the simpler model (easier to interpret, less variability, etc.) if model performance is similar, *even if* a hypothesis test would choose the larger model
-* We expect model performance (deviance, AUC, etc.) to be better on training data than on a new test set
+-   When evaluated on the *training* data, a large model will have a lower deviance than any of its sub-models
+    -   Prediction metrics like AUC are also often higher, even if a reduced model is correct
+-   Often prefer the simpler model (easier to interpret, less variability, etc.) if model performance is similar, *even if* a hypothesis test would choose the larger model
+-   We expect model performance (deviance, AUC, etc.) to be better on training data than on a new test set
 
 ## Training vs. testing data
 
-* Models generally perform better on their *training* data (the data used to fit the model) than on new (*test*) data.
-* When evaluated only on training data, larger models tend to look better
+-   Models generally perform better on their *training* data (the data used to fit the model) than on new (*test*) data.
+-   When evaluated only on training data, larger models tend to look better
 
 How should we assess and compare model performance if we can't sample new data (e.g., in the dengue scenario)?
 
@@ -168,10 +172,10 @@ How should we assess and compare model performance if we can't sample new data (
 
 How should we assess and compare model performance if we can't sample new data (e.g., in the dengue scenario)?
 
-* Randomly divide available data into two groups: training and test
-  * E.g. 70% training, 30% test
-* Fit the model on the training sample
-* Evaluate the model on the test sample
+-   Randomly divide available data into two groups: training and test
+    -   E.g. 70% training, 30% test
+-   Fit the model on the training sample
+-   Evaluate the model on the test sample
 
 ## Data splitting with the dengue data
 
@@ -198,22 +202,21 @@ Are there any potential issues with this strategy?
 
 ## Downsides of train/test splits
 
-* We get less data for training
-* Performance measure depends on the (random) split
+-   We get less data for training
+-   Performance measure depends on the (random) split
 
 Alternative: cross-validation
 
 ## Cross validation
 
-* Divide data into $k$ groups (*folds*)
-* For each fold $i = 1,...,k$:
-  * Train model on the remaining $k-1$ folds
-  * Evaluate on fold $i$
-* Average performance across the $k$ folds
+-   Divide data into $k$ groups (*folds*)
+-   For each fold $i = 1,...,k$:
+    -   Train model on the remaining $k-1$ folds
+    -   Evaluate on fold $i$
+-   Average performance across the $k$ folds
 
 ## Key take-aways
 
-* Don't choose a model based solely on training performance
-  * Will bias towards more complex models
-* Train/test splits and cross-validation give better estimates of model performance
-
+-   Don't choose a model based solely on training performance
+    -   Will bias towards more complex models
+-   Train/test splits and cross-validation give better estimates of model performance

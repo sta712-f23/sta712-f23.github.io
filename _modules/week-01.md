@@ -15,7 +15,8 @@ August 30
   : [slides (html)](https://sta712-f23.github.io/slides/lecture_2.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_2.pdf)
 
 September 1
-: Prediction
+: Prediction and data splitting
+  : [slides (html)](https://sta712-f23.github.io/slides/lecture_3.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_3.pdf), Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_3.html)
 
 : **Homework 1 released**{: .label .label-yellow }
   : [HW 1](https://sta712-f23.github.io/homework/hw1.pdf)
