@@ -56,7 +56,10 @@ If you have any questions about the course (or statistics in general!), please d
 
 Keep in mind that debugging software issues can take time, so make sure to start the assignments early in case you run into problems.
 
-**Office hours:** TBA
+**Office hours:** Drop-in office hours (no appointment needed) will be held
+
+* Wednesday 9:30-10:30am
+* Thursday 10-10:45am and 1-2pm
 
 
 ## Course policies
