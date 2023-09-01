@@ -408,6 +408,104 @@
 </ul></li>
 </ul>
 </section>
+<section id="confusion-matrix" class="slide level2">
+<h2>Confusion matrix</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Survived <span class="sc">~</span> Sex <span class="sc">+</span> Age <span class="sc">+</span> Pclass, <span class="at">data =</span> titanic, </span>
+<span id="cb1-2"><a href="#cb1-2"></a>          <span class="at">family =</span> binomial)</span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="fu">table</span>(<span class="st">"Predicted"</span> <span class="ot">=</span> <span class="fu">ifelse</span>(m1<span class="sc">$</span>fitted.values <span class="sc">&gt;</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb1-5"><a href="#cb1-5"></a>      <span class="st">"Observed"</span> <span class="ot">=</span> m1<span class="sc">$</span>y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         Observed
+Predicted   0   1
+        0 356  83
+        1  68 207</code></pre>
+</div>
+</div>
+<p><strong>Question:</strong> Did we do a good job at predicting survival?</p>
+</section>
+<section id="why-a-threshold-of-0.5" class="slide level2">
+<h2>Why a threshold of 0.5?</h2>
+</section>
+<section id="another-confusion-matrix" class="slide level2">
+<h2>Another confusion matrix</h2>
+<p>Researchers fit a model for the dengue data and produce the following confusion matrix:</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th></th>
+<th>Observed</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td></td>
+<td><span class="math inline">\(Y = 0\)</span></td>
+<td><span class="math inline">\(Y = 1\)</span></td>
+</tr>
+<tr class="even">
+<td><strong>Predicted</strong></td>
+<td><span class="math inline">\(\widehat{Y} = 0\)</span></td>
+<td>3957</td>
+<td>1631</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><span class="math inline">\(\widehat{Y} = 1\)</span></td>
+<td>66</td>
+<td>66</td>
+</tr>
+</tbody>
+</table>
+<p>The accuracy is 70%. Is the model doing a good job?</p>
+</section>
+<section id="changing-the-threshold" class="slide level2">
+<h2>Changing the threshold</h2>
+<p>Threshold of 0.3:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">table</span>(<span class="st">"Predicted"</span> <span class="ot">=</span> <span class="fu">ifelse</span>(m1<span class="sc">$</span>fitted.values <span class="sc">&gt;</span> <span class="fl">0.3</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb3-2"><a href="#cb3-2"></a>      <span class="st">"Observed"</span> <span class="ot">=</span> m1<span class="sc">$</span>y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         Observed
+Predicted   0   1
+        0 301  46
+        1 123 244</code></pre>
+</div>
+</div>
+<p>Threshold of 0.7:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">table</span>(<span class="st">"Predicted"</span> <span class="ot">=</span> <span class="fu">ifelse</span>(m1<span class="sc">$</span>fitted.values <span class="sc">&gt;</span> <span class="fl">0.7</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb5-2"><a href="#cb5-2"></a>      <span class="st">"Observed"</span> <span class="ot">=</span> m1<span class="sc">$</span>y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         Observed
+Predicted   0   1
+        0 407 134
+        1  17 156</code></pre>
+</div>
+</div>
+<p>How do sensitivity and specificity change?</p>
+</section>
+<section id="roc-curve" class="slide level2">
+<h2>ROC curve</h2>
+
+<img data-src="lecture_3_files/figure-revealjs/unnamed-chunk-5-1.png" width="672" class="r-stretch quarto-figure-center"></section>
+<section id="area-under-the-curve-auc" class="slide level2">
+<h2>Area under the curve (AUC)</h2>
+</section>
+<section id="summary" class="slide level2">
+<h2>Summary</h2>
+<ul>
+<li>Threshold predicted probabilities to get binary predictions</li>
+<li>Performance metrics like accuracy, sensitivity, and specificity can be calculated from a confusion matrix</li>
+<li>A threshold of 0.5 maximizes accuracy (in the population)</li>
+<li>As threshold increases, sensitivity decreases and specificity increases</li>
+<li>ROC curves plot the trade-off between sensitivity and specificity</li>
+</ul>
+</section>
 <section id="class-activity" class="slide level2">
 <h2>Class activity</h2>
 <ul>
@@ -419,22 +517,22 @@
 <section id="class-activity-dengue-data" class="slide level2">
 <h2>Class activity: dengue data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue,</span>
-<span id="cb1-2"><a href="#cb1-2"></a>          <span class="at">family =</span> binomial)</span>
-<span id="cb1-3"><a href="#cb1-3"></a>m2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span>  Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT <span class="sc">+</span> BMI <span class="sc">+</span> HCT <span class="sc">+</span> Temperature,</span>
-<span id="cb1-4"><a href="#cb1-4"></a>          <span class="at">data =</span> dengue, <span class="at">family =</span> binomial)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue,</span>
+<span id="cb7-2"><a href="#cb7-2"></a>          <span class="at">family =</span> binomial)</span>
+<span id="cb7-3"><a href="#cb7-3"></a>m2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span>  Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT <span class="sc">+</span> BMI <span class="sc">+</span> HCT <span class="sc">+</span> Temperature,</span>
+<span id="cb7-4"><a href="#cb7-4"></a>          <span class="at">data =</span> dengue, <span class="at">family =</span> binomial)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>How do I perform a LRT to compare the two models?</p>
 </section>
 <section id="class-activity-dengue-data-1" class="slide level2">
 <h2>Class activity: dengue data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue,</span>
-<span id="cb2-2"><a href="#cb2-2"></a>          <span class="at">family =</span> binomial)</span>
-<span id="cb2-3"><a href="#cb2-3"></a>m2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span>  Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT <span class="sc">+</span> BMI <span class="sc">+</span> HCT <span class="sc">+</span> Temperature,</span>
-<span id="cb2-4"><a href="#cb2-4"></a>          <span class="at">data =</span> dengue, <span class="at">family =</span> binomial)</span>
-<span id="cb2-5"><a href="#cb2-5"></a></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="fu">pchisq</span>(m1<span class="sc">$</span>deviance <span class="sc">-</span> m2<span class="sc">$</span>deviance, <span class="dv">3</span>, <span class="at">lower.tail=</span>F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue,</span>
+<span id="cb8-2"><a href="#cb8-2"></a>          <span class="at">family =</span> binomial)</span>
+<span id="cb8-3"><a href="#cb8-3"></a>m2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span>  Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT <span class="sc">+</span> BMI <span class="sc">+</span> HCT <span class="sc">+</span> Temperature,</span>
+<span id="cb8-4"><a href="#cb8-4"></a>          <span class="at">data =</span> dengue, <span class="at">family =</span> binomial)</span>
+<span id="cb8-5"><a href="#cb8-5"></a></span>
+<span id="cb8-6"><a href="#cb8-6"></a><span class="fu">pchisq</span>(m1<span class="sc">$</span>deviance <span class="sc">-</span> m2<span class="sc">$</span>deviance, <span class="dv">3</span>, <span class="at">lower.tail=</span>F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1.742259e-16</code></pre>
 </div>
@@ -444,19 +542,19 @@
 <section id="class-activity-dengue-data-2" class="slide level2">
 <h2>Class activity: dengue data</h2>
 
-<img data-src="lecture_3_files/figure-revealjs/unnamed-chunk-4-1.png" width="672" class="r-stretch quarto-figure-center"><p>Which model would you choose?</p>
+<img data-src="lecture_3_files/figure-revealjs/unnamed-chunk-8-1.png" width="672" class="r-stretch quarto-figure-center"><p>Which model would you choose?</p>
 </section>
 <section id="class-activity-simulated-data" class="slide level2">
 <h2>Class activity: simulated data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> X[,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="at">family =</span> binomial)</span>
-<span id="cb4-2"><a href="#cb4-2"></a>m2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> X, <span class="at">family =</span> binomial)</span>
-<span id="cb4-3"><a href="#cb4-3"></a></span>
-<span id="cb4-4"><a href="#cb4-4"></a>m1<span class="sc">$</span>deviance</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> X[,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="at">family =</span> binomial)</span>
+<span id="cb10-2"><a href="#cb10-2"></a>m2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> X, <span class="at">family =</span> binomial)</span>
+<span id="cb10-3"><a href="#cb10-3"></a></span>
+<span id="cb10-4"><a href="#cb10-4"></a>m1<span class="sc">$</span>deviance</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1294.233</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>m2<span class="sc">$</span>deviance</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>m2<span class="sc">$</span>deviance</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1292.818</code></pre>
 </div>
@@ -466,15 +564,15 @@
 <section id="class-activity-simulated-data-1" class="slide level2">
 <h2>Class activity: simulated data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>pred1 <span class="ot">&lt;-</span> <span class="fu">prediction</span>(m1<span class="sc">$</span>fitted.values, m1<span class="sc">$</span>y)</span>
-<span id="cb8-2"><a href="#cb8-2"></a>pred2 <span class="ot">&lt;-</span> <span class="fu">prediction</span>(m2<span class="sc">$</span>fitted.values, m2<span class="sc">$</span>y)</span>
-<span id="cb8-3"><a href="#cb8-3"></a></span>
-<span id="cb8-4"><a href="#cb8-4"></a><span class="fu">performance</span>(pred1, <span class="st">"auc"</span>)<span class="sc">@</span>y.values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>pred1 <span class="ot">&lt;-</span> <span class="fu">prediction</span>(m1<span class="sc">$</span>fitted.values, m1<span class="sc">$</span>y)</span>
+<span id="cb14-2"><a href="#cb14-2"></a>pred2 <span class="ot">&lt;-</span> <span class="fu">prediction</span>(m2<span class="sc">$</span>fitted.values, m2<span class="sc">$</span>y)</span>
+<span id="cb14-3"><a href="#cb14-3"></a></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="fu">performance</span>(pred1, <span class="st">"auc"</span>)<span class="sc">@</span>y.values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
 [1] 0.5808683</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">performance</span>(pred2, <span class="st">"auc"</span>)<span class="sc">@</span>y.values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">performance</span>(pred2, <span class="st">"auc"</span>)<span class="sc">@</span>y.values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
 [1] 0.5847598</code></pre>
@@ -485,22 +583,22 @@
 <section id="class-activity-new-simulated-data" class="slide level2">
 <h2>Class activity: new simulated data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># predictions on new observations</span></span>
-<span id="cb12-2"><a href="#cb12-2"></a>phat_m1 <span class="ot">&lt;-</span> <span class="fu">exp</span>(m1<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new[,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>] <span class="sc">%*%</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])<span class="sc">/</span>(</span>
-<span id="cb12-3"><a href="#cb12-3"></a>  <span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(m1<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new[,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>] <span class="sc">%*%</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])</span>
-<span id="cb12-4"><a href="#cb12-4"></a>)</span>
-<span id="cb12-5"><a href="#cb12-5"></a></span>
-<span id="cb12-6"><a href="#cb12-6"></a>phat_m2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(m2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new <span class="sc">%*%</span> m2<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">7</span>])<span class="sc">/</span>(</span>
-<span id="cb12-7"><a href="#cb12-7"></a>  <span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(m2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new <span class="sc">%*%</span> m2<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">7</span>])</span>
-<span id="cb12-8"><a href="#cb12-8"></a>)</span>
-<span id="cb12-9"><a href="#cb12-9"></a></span>
-<span id="cb12-10"><a href="#cb12-10"></a><span class="co"># new deviance for model 1</span></span>
-<span id="cb12-11"><a href="#cb12-11"></a><span class="sc">-</span><span class="dv">2</span><span class="sc">*</span><span class="fu">sum</span>(y_new<span class="sc">*</span><span class="fu">log</span>(phat_m1) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">-</span>y_new)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> phat_m1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="co"># predictions on new observations</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a>phat_m1 <span class="ot">&lt;-</span> <span class="fu">exp</span>(m1<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new[,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>] <span class="sc">%*%</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])<span class="sc">/</span>(</span>
+<span id="cb18-3"><a href="#cb18-3"></a>  <span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(m1<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new[,<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>] <span class="sc">%*%</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])</span>
+<span id="cb18-4"><a href="#cb18-4"></a>)</span>
+<span id="cb18-5"><a href="#cb18-5"></a></span>
+<span id="cb18-6"><a href="#cb18-6"></a>phat_m2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(m2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new <span class="sc">%*%</span> m2<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">7</span>])<span class="sc">/</span>(</span>
+<span id="cb18-7"><a href="#cb18-7"></a>  <span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(m2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> X_new <span class="sc">%*%</span> m2<span class="sc">$</span>coefficients[<span class="dv">2</span><span class="sc">:</span><span class="dv">7</span>])</span>
+<span id="cb18-8"><a href="#cb18-8"></a>)</span>
+<span id="cb18-9"><a href="#cb18-9"></a></span>
+<span id="cb18-10"><a href="#cb18-10"></a><span class="co"># new deviance for model 1</span></span>
+<span id="cb18-11"><a href="#cb18-11"></a><span class="sc">-</span><span class="dv">2</span><span class="sc">*</span><span class="fu">sum</span>(y_new<span class="sc">*</span><span class="fu">log</span>(phat_m1) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">-</span>y_new)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> phat_m1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1321.424</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># new deviance for model 2</span></span>
-<span id="cb14-2"><a href="#cb14-2"></a><span class="sc">-</span><span class="dv">2</span><span class="sc">*</span><span class="fu">sum</span>(y_new<span class="sc">*</span><span class="fu">log</span>(phat_m2) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">-</span>y_new)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> phat_m2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># new deviance for model 2</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a><span class="sc">-</span><span class="dv">2</span><span class="sc">*</span><span class="fu">sum</span>(y_new<span class="sc">*</span><span class="fu">log</span>(phat_m2) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">-</span>y_new)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> phat_m2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1321.842</code></pre>
 </div>
@@ -541,21 +639,21 @@
 <section id="data-splitting-with-the-dengue-data" class="slide level2">
 <h2>Data splitting with the dengue data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># create training and test splits</span></span>
-<span id="cb16-2"><a href="#cb16-2"></a>train_sample <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(dengue), <span class="fl">0.7</span><span class="sc">*</span><span class="fu">nrow</span>(dengue), <span class="at">replace =</span> F)</span>
-<span id="cb16-3"><a href="#cb16-3"></a>dengue_train <span class="ot">&lt;-</span> dengue[train_sample,]</span>
-<span id="cb16-4"><a href="#cb16-4"></a>dengue_test <span class="ot">&lt;-</span> dengue[<span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(dengue), train_sample),]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># create training and test splits</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>train_sample <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(dengue), <span class="fl">0.7</span><span class="sc">*</span><span class="fu">nrow</span>(dengue), <span class="at">replace =</span> F)</span>
+<span id="cb22-3"><a href="#cb22-3"></a>dengue_train <span class="ot">&lt;-</span> dengue[train_sample,]</span>
+<span id="cb22-4"><a href="#cb22-4"></a>dengue_test <span class="ot">&lt;-</span> dengue[<span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(dengue), train_sample),]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="co"># fit the model</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a>m1_train <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue_train, </span>
-<span id="cb17-3"><a href="#cb17-3"></a>                <span class="at">family =</span> binomial)</span>
-<span id="cb17-4"><a href="#cb17-4"></a></span>
-<span id="cb17-5"><a href="#cb17-5"></a><span class="co"># predict on test data</span></span>
-<span id="cb17-6"><a href="#cb17-6"></a>test_predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(m1_train, <span class="at">newdata =</span> dengue_test,</span>
-<span id="cb17-7"><a href="#cb17-7"></a>                            <span class="at">type =</span> <span class="st">"response"</span>)</span>
-<span id="cb17-8"><a href="#cb17-8"></a>pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(test_predictions,dengue_test<span class="sc">$</span>Dengue)</span>
-<span id="cb17-9"><a href="#cb17-9"></a><span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="co"># fit the model</span></span>
+<span id="cb23-2"><a href="#cb23-2"></a>m1_train <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue_train, </span>
+<span id="cb23-3"><a href="#cb23-3"></a>                <span class="at">family =</span> binomial)</span>
+<span id="cb23-4"><a href="#cb23-4"></a></span>
+<span id="cb23-5"><a href="#cb23-5"></a><span class="co"># predict on test data</span></span>
+<span id="cb23-6"><a href="#cb23-6"></a>test_predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(m1_train, <span class="at">newdata =</span> dengue_test,</span>
+<span id="cb23-7"><a href="#cb23-7"></a>                            <span class="at">type =</span> <span class="st">"response"</span>)</span>
+<span id="cb23-8"><a href="#cb23-8"></a>pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(test_predictions,dengue_test<span class="sc">$</span>Dengue)</span>
+<span id="cb23-9"><a href="#cb23-9"></a><span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
 [1] 0.8252114</code></pre>

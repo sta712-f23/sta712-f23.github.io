@@ -14,6 +14,12 @@ editor_options:
 library(tidyverse)
 library(ROCR)
 dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
+
+titanic <- read.csv("https://sta214-f22.github.io/labs/Titanic.csv")
+
+titanic <- titanic |>
+  drop_na() |>
+  mutate(Pclass = factor(Pclass, levels = c(3, 2, 1)))
 ```
 
 ## Semester research project
@@ -26,6 +32,81 @@ Due Monday (your group should collectively email me):
 -   Tentative topic (ok if this changes for the first few weeks). Include:
     -   A couple references
     -   Why you want to explore this topic
+    
+## Confusion matrix
+
+```{r}
+m1 <- glm(Survived ~ Sex + Age + Pclass, data = titanic, 
+          family = binomial)
+
+table("Predicted" = ifelse(m1$fitted.values > 0.5, 1, 0),
+      "Observed" = m1$y)
+```
+
+**Question:** Did we do a good job at predicting survival?
+
+## Why a threshold of 0.5?
+
+## Another confusion matrix
+
+Researchers fit a model for the dengue data and produce the following confusion matrix:
+
+|               |                   | Observed |         |
+|---------------|-------------------|----------|---------|
+|               |                   | $Y = 0$  | $Y = 1$ |
+| **Predicted** | $\widehat{Y} = 0$ | 3957     | 1631    |
+|               | $\widehat{Y} = 1$ | 66       | 66      |
+
+The accuracy is 70%. Is the model doing a good job?
+
+## Changing the threshold
+
+Threshold of 0.3:
+
+```{r}
+table("Predicted" = ifelse(m1$fitted.values > 0.3, 1, 0),
+      "Observed" = m1$y)
+```
+
+Threshold of 0.7:
+
+```{r}
+table("Predicted" = ifelse(m1$fitted.values > 0.7, 1, 0),
+      "Observed" = m1$y)
+```
+
+How do sensitivity and specificity change?
+
+## ROC curve
+
+```{r echo=F, message=F, warning=F, fig.align='center', fig.width=7, fig.height=6}
+library(ROCR)
+pred <- prediction(m1$fitted.values, titanic$Survived)
+perf <- performance(pred,"tpr","fpr")
+
+# performance(pred, "auc")@y.values # 0.858
+
+data.frame(fpr = perf@x.values[[1]],
+           tpr = perf@y.values[[1]]) |>
+  ggplot(aes(x = fpr, y = tpr)) +
+  geom_line(lwd=1.5) +
+  geom_abline(slope = 1, intercept = 0, lty = 2,
+              lwd = 1.5) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic() +
+  theme(text = element_text(size = 20))
+```
+
+## Area under the curve (AUC)
+
+## Summary
+
+-   Threshold predicted probabilities to get binary predictions
+-   Performance metrics like accuracy, sensitivity, and specificity can be calculated from a confusion matrix
+-   A threshold of 0.5 maximizes accuracy (in the population)
+-   As threshold increases, sensitivity decreases and specificity increases
+-   ROC curves plot the trade-off between sensitivity and specificity
 
 ## Class activity
 
