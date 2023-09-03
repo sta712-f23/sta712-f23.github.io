@@ -1,6 +1,12 @@
 \documentclass[11pt]{article}
-
-\usepackage{authblk} % author list
+\usepackage{url}
+\usepackage{alltt}
+\usepackage{bm}
+\linespread{1}
+\textwidth 6.5in
+\oddsidemargin 0.in
+\addtolength{\topmargin}{-1in}
+\addtolength{\textheight}{2in}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -8,22 +14,6 @@
 \usepackage{bm}
 \usepackage{hyperref}
 
-% More generous page layout
-\usepackage{geometry}
-
-\usepackage{graphicx}
-\usepackage{hyperref}
-
-
-\usepackage{natbib}
-\bibliographystyle{apalike}
-
-\usepackage[ttdefault=true]{AnonymousPro}
-\usepackage{float}
-
-% TODO Required for review.
-\usepackage{setspace}
-%\doublespacing
 
 \title{STA 712: HW 2}
 
@@ -37,6 +27,145 @@
 \noindent \textbf{Due:} Friday, September 15, 12:00pm (noon) on Canvas\\
 
 \noindent \textbf{Instructions:} Submit your work as a single PDF. Your document should be created using LaTeX; see the course website for a \href{https://sta712-f23.github.io/homework/hw_template.tex}{homework template file} and \href{https://sta712-f23.github.io/homework/latex_instructions/}{instructions} on getting started with LaTeX and Overleaf.
+
+\section{Reproducing the dengue results}
+
+Now that you've read the dengue paper by Tuan \textit{et al.}, we will try to reproduce their results. I have downloaded their data, and performed some initial data cleaning for you. The prepared data can be loaded into R using the following command:
+
+\begin{verbatim}
+dengue <- read.csv("https://sta214-s23.github.io/homework/dengue.csv")
+\end{verbatim}
+
+The prepared data contains 5720 patients, with the following variables:
+
+\begin{itemize}
+\item SiteNumber: The hospital at which the data was recorded 
+\item Sex: patient's sex (female or male)
+\item Age: patient's age (in years)
+\item DiseaseDay: how long the patient has been ill
+\item Vomiting: whether the patient has experienced vomiting (0 = no, 1 = yes)
+\item Abdominal: whether the patient has abdominal pain (0 = no, 1 = yes)
+\item Temperature: patient's body temperature (in Celsius)
+\item BMI: the patient's body mass index (BMI)
+\item WBC: the patient's white blood cell count
+\item HCT: the patient's hematocrit
+\item PLT: the patient's platelet count
+\item RapidTest: predicted disease status from a rapid test (positive or negative)
+\item Dengue: whether the patient actually has dengue fever, based on a lab test (0 = no, 1 = yes)
+\end{itemize}
+
+\begin{enumerate}
+\item[12.] First, let's look at the rapid test. 
+
+\begin{enumerate}
+\item Create a confusion matrix for the predictions from the rapid test. Note that you will not need to threshold these predictions, as the rapid test already makes binary predictions!
+
+\item Calculate the accuracy, sensitivity, specificity, and positive predictive value for the rapid test.
+\end{enumerate}
+
+\item[13.] Next, let's look at the final model chosen by the researchers. Their Early Dengue Classifier uses age, white blood cell count, and platelet count to predict dengue status. 
+
+\begin{enumerate}
+\item Fit a logistic regression model to predict dengue status using age, white blood cell count, and platelet count.
+
+\item Create a confusion matrix for the predictions from your fitted model. Use the same threshold as in the paper (0.333).
+
+\item Calculate the accuracy, sensitivity, specificity, and positive predictive value for your logistic regression model. Are the values close to the values reported in the original paper? (It is ok if they don't match exactly)
+
+\item How does the logistic regression model perform, compared to the rapid test?
+
+\item Now let's create an ROC curve for the logistic regression model, so we can assess predictive performance across different thresholds. If your logistic regression model is named \verb;m1;, the following code will create the ROC curve and calculate the AUC. Run the code below to calculate the AUC and make the plot; is the AUC similar to the value reported in the original paper?
+
+\begin{verbatim}
+library(ROCR)
+pred <- prediction(m1$fitted.values, dengue$Dengue)
+perf <- performance(pred,"tpr","fpr")
+
+performance(pred, "auc")@y.values 
+
+data.frame(fpr = perf@x.values[[1]],
+           tpr = perf@y.values[[1]]) %>%
+  ggplot(aes(x = fpr, y = tpr)) +
+  geom_line(lwd=1.5) +
+  geom_abline(slope = 1, intercept = 0, lty = 2,
+              lwd = 1.5) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic()
+\end{verbatim}
+
+\end{enumerate}
+
+\item[14.] Finally, let's experiment with model selection to see if we get a different model than the one selected by the researchers.
+
+\begin{enumerate}
+\item Adapt the code from the class activity on February 13 to perform forward stepwise selection with AIC on the dengue data. Your response variable should be \verb;Dengue;, and your full model (the \verb;scope; in the \verb;stepAIC; function) should contain all explanatory variables \textbf{except} for RapidTest and SiteNumber. Which variables are chosen in forward stepwise selection?
+
+\item Calculate an AUC for the model chosen by forward stepwise selection. Is it very different from the AUC of the model in question 13?
+
+\item Explain why the researchers preferred the model from question 13.
+\end{enumerate}
+\end{enumerate}
+
+\section{Data analysis}
+
+You are contacted by the US Small Business Administration (SBA), a government agency dedicated to helping support small businesses. The SBA provides loans to small businesses, but some businesses \textit{default} on their loan (i.e., fail to pay it back). Researchers at the SBA are interested in predicting whether a business will default on the loan, and they have collected a random sample of 5000 different loans.\\
+
+\noindent You can load the SBA data into R by
+
+\begin{verbatim}
+sba <- read.csv("https://sta712-f22.github.io/homework/sba_small.csv")
+\end{verbatim}
+
+
+\noindent For each loan, we have the following variables:
+
+\begin{itemize}
+\item LoanNr\_ChkDgt:	Loan ID number that uniquely identifies each loan
+\item Name: 	Name of business receiving the loan
+\item City: 	City the business is based in
+\item State: 	State the business is based in (two-letter abbreviation)
+\item Zip: 	ZIP code the business is based in
+\item Bank: 	Name of bank making the loan
+\item BankState: 	State of the bank making the loan (two-letter abbreviation)
+\item NAICS: 	North American Industry Classification System code identifying the industry of the business receiving the loan
+\item ApprovalDate: 	Date of approval (YYYY-MM-DD) of the loan
+\item ApprovalFY: 	Fiscal year of approval of the loan
+\item Term: 	Length of the loan term (months)
+\item NoEmp: 	Number of employees of the business before receiving the loan
+\item NewExist: 	1 if business already existed, 2 if business is new
+\item CreateJob: 	Number of jobs the business expects to create using the loan money
+\item RetainedJob: 	Number of jobs the business expects to retain because they received the loan
+\item FranchiseCode: 	For businesses that are franchises, a unique five-digit code identifying which brand they are a franchise of. 0 or 1 if the business is not a franchise.
+\item UrbanRural: 	1 if business is in urban area, 2 if business is in rural area, 0 if unknown
+\item RevLineCr: 	Y if this is a revolving line of credit, N if not
+\item LowDoc: 	Y if loan was issued under the `LowDoc Loan' program, which allows loans under \$150,000 to be processed with a short one-page application. N if loan is issued with a standard application, which is much longer
+\item ChgOffDate: 	The date (YYYY-MM-DD) the loan was declared to be in default, if the borrower stopped paying it back
+\item DisbursementDate: 	Date (YYYY-MM-DD) the loan money was disbursed to the business
+\item DisbursementGross:	The amount of money disbursed (loaned), in dollars
+\item BalanceGross: 	The amount of money remaining to be paid back, in dollars
+\item MIS\_Status: 	Current loan status. CHGOFF = charged off, P I F = paid in full.
+\item ChgOffPrinGr: 	Amount of money charged off, if the borrower defaulted, in dollars
+\item GrAppv: 	Gross amount of loan approved by the bank, in dollars
+\item SBA\_Appv: 	Amount of the loan guaranteed by the SBA, in dollars 
+\end{itemize}
+
+\noindent \textbf{Research question:} Suppose that researchers at the SBA would like to predict which loans are likely to default; this will help them decide how to best allocate loans to the businesses applying. They ask you to build a model to predict loan default, taking into account the following preferences:
+\begin{itemize}
+\item Saving money is a top priority, so they want a model that will do a good job at predicting defaults for new loans
+
+\item However, the final model also has to be understandable by loan officers and the businesses applying. In particular, the SBA wants to be able to explain to businesses \textit{why} an application has been denied.
+\end{itemize}
+
+\noindent Taking these preferences into account, build a model to predict loan defaults using the SBA data. Then answer the following questions. Make sure to provide all code and results. (Note: the questions do not ask you about exploratory data analysis, but EDA is always a good idea).
+
+\begin{enumerate}
+\item Summarize your final model, and describe how you chose that model. 
+
+\item Interpret some of the coefficients in your final model.
+
+\item Assess and interpret the predictive performance of your final model.
+\end{enumerate}
 
 \section{Two views of AIC}
 
@@ -57,7 +186,7 @@ We fit our model via maximum likelihood estimation, producing the maximum likeli
 \begin{enumerate}
 \item Show that $K(f_\theta, f_0) = 0$ if $f_\theta = f_0$.
 
-\item Using the fact that $log(x) \leq x - 1$ for all $x$, show that $K(f_\theta, f_0) \geq 0$ if $f_\theta \neq f_0$.
+\item Using the fact that $\log(x) \leq x - 1$ for all $x$, show that $K(f_\theta, f_0) \geq 0$ if $f_\theta \neq f_0$.
 
 \item Conclude that, if we \textit{could} calculate KL divergence for our models, and the true model $f_0$ was among the models considered in the model selection procedure, then minimizing KL divergence would find the true model.
 
@@ -111,7 +240,7 @@ Stone, M. (1977). \href{https://www.jstor.org/stable/2984877}{An asymptotic equi
 \begin{enumerate}
 \item In this paper, what is the LOOCV metric that we want to minimize? That is, what value is calculated for each held-out observation?
 
-\item The goal of the article is to show that model selection by AIC and LOOCV are asymptotically equivalent. In particular, which two quantities (give the equation numbers) does the author plan to show are equivalent?
+\item The goal of the article is to show that model selection by AIC and LOOCV are asymptotically equivalent. In particular, which two quantities (describe the quantities and give the equation numbers) does the author plan to show are equivalent?
 \end{enumerate}
 
 \noindent Now read section 4 (you may need to read it several times). For your first read-through, I suggest skimming over details like regularity conditions, and focusing on the general outline of the mathematical results. In particular:
