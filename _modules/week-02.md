@@ -14,5 +14,5 @@ September 8
 : No class
 
 : **Homework 2 released**{: .label .label-yellow }
-  : [HW 1](https://sta712-f23.github.io/homework/hw2.pdf)
+  : [HW 2](https://sta712-f23.github.io/homework/hw2.pdf)
 
