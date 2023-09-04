@@ -26,7 +26,7 @@
 
 \noindent \textbf{Due:} Friday, September 15, 12:00pm (noon) on Canvas\\
 
-\noindent \textbf{Instructions:} Submit your work as a single PDF. Your document should be created using LaTeX; see the course website for a \href{https://sta712-f23.github.io/homework/hw_template.tex}{homework template file} and \href{https://sta712-f23.github.io/homework/latex_instructions/}{instructions} on getting started with LaTeX and Overleaf.
+\noindent \textbf{Instructions:} Submit your work as a single PDF, or as two separate PDFs (one for Parts 1 and 2, and another for Part 3). Parts 1 and 2 should be created using R Markdown or Quarto, so that all code needed to reproduce your results is included in the knitted document. Part 3 should be created using LaTeX; see the course website for a \href{https://sta712-f23.github.io/homework/hw_template.tex}{homework template file} and \href{https://sta712-f23.github.io/homework/latex_instructions/}{instructions} on getting started with LaTeX and Overleaf. See the Overleaf guide on \href{https://www.overleaf.com/learn/latex/Mathematical_expressions}{mathematical expressions} to get started writing math in LaTeX.
 
 \section{Reproducing the dengue results}
 
@@ -36,7 +36,7 @@ Now that you've read the dengue paper by Tuan \textit{et al.}, we will try to re
 dengue <- read.csv("https://sta214-s23.github.io/homework/dengue.csv")
 \end{verbatim}
 
-The prepared data contains 5720 patients, with the following variables:
+\noindent The prepared data contains 5720 patients, with the following variables:
 
 \begin{itemize}
 \item SiteNumber: The hospital at which the data was recorded 
@@ -54,23 +54,25 @@ The prepared data contains 5720 patients, with the following variables:
 \item Dengue: whether the patient actually has dengue fever, based on a lab test (0 = no, 1 = yes)
 \end{itemize}
 
+\newpage
+
 \begin{enumerate}
-\item[12.] First, let's look at the rapid test. 
+\item First, let's look at the rapid test. 
 
 \begin{enumerate}
 \item Create a confusion matrix for the predictions from the rapid test. Note that you will not need to threshold these predictions, as the rapid test already makes binary predictions!
 
-\item Calculate the accuracy, sensitivity, specificity, and positive predictive value for the rapid test.
+\item Calculate the accuracy, sensitivity, and specificity for the rapid test.
 \end{enumerate}
 
-\item[13.] Next, let's look at the final model chosen by the researchers. Their Early Dengue Classifier uses age, white blood cell count, and platelet count to predict dengue status. 
+\item Next, let's look at the final model chosen by the researchers. Their Early Dengue Classifier uses age, white blood cell count, and platelet count to predict dengue status. 
 
 \begin{enumerate}
 \item Fit a logistic regression model to predict dengue status using age, white blood cell count, and platelet count.
 
 \item Create a confusion matrix for the predictions from your fitted model. Use the same threshold as in the paper (0.333).
 
-\item Calculate the accuracy, sensitivity, specificity, and positive predictive value for your logistic regression model. Are the values close to the values reported in the original paper? (It is ok if they don't match exactly)
+\item Calculate the accuracy, sensitivity, and specificity for your logistic regression model. Are the values close to the values reported in the original paper? (It is ok if they don't match exactly)
 
 \item How does the logistic regression model perform, compared to the rapid test?
 
@@ -78,13 +80,14 @@ The prepared data contains 5720 patients, with the following variables:
 
 \begin{verbatim}
 library(ROCR)
+library(tidyverse)
 pred <- prediction(m1$fitted.values, dengue$Dengue)
 perf <- performance(pred,"tpr","fpr")
 
 performance(pred, "auc")@y.values 
 
 data.frame(fpr = perf@x.values[[1]],
-           tpr = perf@y.values[[1]]) %>%
+           tpr = perf@y.values[[1]]) |>
   ggplot(aes(x = fpr, y = tpr)) +
   geom_line(lwd=1.5) +
   geom_abline(slope = 1, intercept = 0, lty = 2,
@@ -96,14 +99,14 @@ data.frame(fpr = perf@x.values[[1]],
 
 \end{enumerate}
 
-\item[14.] Finally, let's experiment with model selection to see if we get a different model than the one selected by the researchers.
+\item Finally, let's experiment with model selection to see if we get a different model than the one selected by the researchers.
 
 \begin{enumerate}
-\item Adapt the code from the class activity on February 13 to perform forward stepwise selection with AIC on the dengue data. Your response variable should be \verb;Dengue;, and your full model (the \verb;scope; in the \verb;stepAIC; function) should contain all explanatory variables \textbf{except} for RapidTest and SiteNumber. Which variables are chosen in forward stepwise selection?
+\item Use code from class to perform forward stepwise selection with AIC on the dengue data. Your response variable should be \verb;Dengue;, and your full model (the \verb;scope; in the \verb;stepAIC; function) should contain all explanatory variables \textbf{except} for RapidTest and SiteNumber. Which variables are chosen in forward stepwise selection?
 
-\item Calculate an AUC for the model chosen by forward stepwise selection. Is it very different from the AUC of the model in question 13?
+\item Calculate an AUC for the model chosen by forward stepwise selection. Is it very different from the AUC of the model in question 2?
 
-\item Explain why the researchers preferred the model from question 13.
+\item Explain why the researchers preferred the model from question 2.
 \end{enumerate}
 \end{enumerate}
 
@@ -160,18 +163,20 @@ sba <- read.csv("https://sta712-f22.github.io/homework/sba_small.csv")
 \noindent Taking these preferences into account, build a model to predict loan defaults using the SBA data. Then answer the following questions. Make sure to provide all code and results. (Note: the questions do not ask you about exploratory data analysis, but EDA is always a good idea).
 
 \begin{enumerate}
-\item Summarize your final model, and describe how you chose that model. 
+\item[4.] Summarize your final model, and describe how you chose that model. 
 
-\item Interpret some of the coefficients in your final model.
+\item[5.] Interpret some of the coefficients in your final model.
 
-\item Assess and interpret the predictive performance of your final model.
+\item[6.] Assess and interpret the predictive performance of your final model.
 \end{enumerate}
 
 \section{Two views of AIC}
 
+In class, we discussed train/test splits, $k$-fold cross validation, and leave-one-out cross-validation (LOOCV) as methods for estimating model performance on new data, and thereby choosing between different models. We also discussed AIC and BIC as alternatives which are less computationally intensive. While AIC and BIC intuitively penalize the log-likelihood for the number of parameters in the model, it is not immediately clear how AIC or BIC is connected to model performance on new data. In this section, you will explore two different perspectives of AIC to better understand why AIC is a reasonable metric for comparing models: a derivation of AIC for estimating the KL divergence, and an asymptotic equivalence between AIC and LOOCV.
+
 \subsection*{AIC and the KL divergence}
 
-Let $Y$ denote the response variable of interest in a generalized linear model, and let $f_0(y)$ denote the \textit{true} probability function of the response (i.e., the true distribution that generated the data). For simplicity, assume here that $Y$ is continuous, so $f_0(y)$ is a density.\\
+Let $Y$ denote the response variable of interest in a model, and let $f_0(y)$ denote the \textit{true} probability function of the response (i.e., the true distribution that generated the data). For simplicity, assume here that $Y$ is continuous, so $f_0(y)$ is a density.\\
 
 \noindent We consider a family of distributions $\{f_{\theta}(y) : \bm{\theta} \in \Theta \}$, parameterized by a vector $\bm{\theta} \in \mathbb{R}^p$. Our goal, when building a model, is to choose the parameters $\bm{\theta}$ which make $f_\theta(y)$ as close to the \textit{true} distribution $f_0(y)$ as possible.\\
 
