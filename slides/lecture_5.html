@@ -333,14 +333,54 @@
 <section id="last-time" class="slide level2">
 <h2>Last time</h2>
 <ul>
-<li>Models fit training data better than new data</li>
-<li>Models chosen by optimizing training performance (e.g.&nbsp;deviance) will be overfit</li>
-<li>Methods for approximating performance (log-likelihood, deviance, accuracy, etc.) on new data:
+<li>When evaluated on the <em>training</em> data, a large model will have a lower deviance than any of its sub-models
 <ul>
-<li>Train/test splits</li>
-<li><span class="math inline">\(k\)</span>-fold cross-validation</li>
-<li>leave-one-out cross-validation</li>
+<li>Prediction metrics like AUC are also often higher, even if a reduced model is correct</li>
 </ul></li>
+<li>Often prefer the simpler model (easier to interpret, less variability, etc.) if model performance is similar, <em>even if</em> a hypothesis test would choose the larger model</li>
+<li>We expect model performance (deviance, AUC, etc.) to be better on training data than on a new test set</li>
+</ul>
+</section>
+<section id="data-splitting" class="slide level2">
+<h2>Data splitting</h2>
+<p>How should we assess and compare model performance if we can’t sample new data (e.g., in the dengue scenario)?</p>
+<ul>
+<li>Randomly divide available data into two groups: training and test
+<ul>
+<li>E.g. 70% training, 30% test</li>
+</ul></li>
+<li>Fit the model on the training sample</li>
+<li>Evaluate the model on the test sample</li>
+</ul>
+</section>
+<section id="downsides-of-traintest-splits" class="slide level2">
+<h2>Downsides of train/test splits</h2>
+<ul>
+<li>We get less data for training</li>
+<li>Performance measure depends on the (random) split</li>
+</ul>
+<p>Alternative: cross-validation</p>
+</section>
+<section id="cross-validation" class="slide level2">
+<h2>Cross validation</h2>
+<ul>
+<li>Divide data into <span class="math inline">\(k\)</span> groups (<em>folds</em>)</li>
+<li>For each fold <span class="math inline">\(i = 1,...,k\)</span>:
+<ul>
+<li>Train model on the remaining <span class="math inline">\(k-1\)</span> folds</li>
+<li>Evaluate on fold <span class="math inline">\(i\)</span></li>
+</ul></li>
+<li>Average performance across the <span class="math inline">\(k\)</span> folds</li>
+</ul>
+</section>
+<section id="key-take-aways" class="slide level2">
+<h2>Key take-aways</h2>
+<ul>
+<li>Don’t choose a model based solely on training performance
+<ul>
+<li>Will bias towards more complex models</li>
+</ul></li>
+<li>Train/test splits and cross-validation give better estimates of model performance</li>
 </ul>
 <p><strong>Next step:</strong> A way to systematically search through models</p>
 </section>
@@ -368,6 +408,11 @@
 </section>
 <section id="forward-stepwise-selection" class="slide level2">
 <h2>Forward stepwise selection</h2>
+<ol type="1">
+<li>Start with a small model</li>
+<li>Consider each unused variable; add the variable which most improves the optimality criterion</li>
+<li>Repeat Step 2 until the optimality criterion can no longer be improved</li>
+</ol>
 </section>
 <section id="backward-stepwise-selection" class="slide level2">
 <h2>Backward stepwise selection</h2>
