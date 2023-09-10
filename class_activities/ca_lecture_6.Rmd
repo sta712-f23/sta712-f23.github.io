@@ -1,0 +1,56 @@
+---
+title: "Class Activity"
+output: 
+  tufte::tufte_html:
+    css: "lab.css"
+    tufte_variant: "envisioned"
+    highlight: pygments
+link-citations: yes
+---
+
+# Developing a statistical analysis plan
+
+Choosing an appropriate statistical tool is crucial to a successful analysis. If we dive into modeling as soon as we get data, it is very easy to lose sight of the larger research goals and spend our energy on statistical analyses which don't address the primary aims of the study.
+
+In addition to thinking about what our main approach will be (do we care more about prediction? about inference?), it is very helpful to craft a *statistical analysis plan* before beginning the analysis. A statistical analysis plan (SAP) describes the research questions we are trying to answer, the data we will use, and the main statistical methods we will use to address the research questions. 
+
+A good description of statistical analysis plans can be found in the article [Crafting statistical analysis plans: A cross-discipline approach](https://onlinelibrary.wiley.com/doi/full/10.1002/sta4.528), by Kimberly Cressman and Julia Sharp. They identify seven steps in a SAP (described in detail in Table 1 of the paper):
+
+* What are the research questions/objectives?
+* What are the variables?
+* What is the study design / how was the data collected?
+* How will you explore/summarize the data?
+* What will be examined statistically?
+* What alternative strategies should be considered?
+* What statistical results will be presented?
+
+## Creating a SAP for the canine contact data
+
+In HW 1, you read the article "The Importance of Client–Canine Contact in Canine-
+Assisted Interventions: A Randomized Controlled Trial". The researchers' first hypothesis was that each treatment group would see a decrease in ill-being and an increase in well-being after treatment. In this activity, you will begin to build a statistical analysis plan to investigate that hypothesis using the data collected in the study.
+
+### The variables
+
+1. What variables should the researchers use to investigate the research question? How are those variables measured?
+
+### The study design
+
+2. What information is recorded for each individual in the study? What are the three treatment groups, and how was treatment assigned?
+
+### Data exploration
+
+3. How could you summarize the data, and any relevant relationships between variables?
+
+### Statistical analysis
+
+4. What statistical method(s) will you use to address the research question? 
+
+### Alternative strategies
+
+5. Are there any assumptions we need to check for the statistical methods we have chosen? What will we do if those assumptions are violated?
+
+### Statistical results
+
+6. What statistical results will be presented? (e.g. p-values, confidence intervals, test statistics, etc.)
+
+

@@ -1,0 +1,110 @@
+\documentclass[11pt]{article}
+\usepackage{url}
+\usepackage{alltt}
+\usepackage{bm}
+\linespread{1}
+\textwidth 6.5in
+\oddsidemargin 0.in
+\addtolength{\topmargin}{-1in}
+\addtolength{\textheight}{2in}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{hyperref}
+
+\begin{document}
+
+
+\begin{center}
+\Large
+STA 712 Homework 3\\
+\normalsize
+\vspace{5mm}
+\end{center}
+
+\noindent \textbf{Due:} Friday, September 22, 12:00pm (noon) on Canvas.\\ 
+
+\noindent \textbf{Instructions:} Submit your work as a single PDF, or as two separate PDFs (one for Parts 1 and 2, and another for Part 3). Parts 1 and 2 should be created using LaTeX; see the course website for a \href{https://sta712-f23.github.io/homework/hw_template.tex}{homework template file} and \href{https://sta712-f23.github.io/homework/latex_instructions/}{instructions} on getting started with LaTeX and Overleaf. See the Overleaf guide on \href{https://www.overleaf.com/learn/latex/Mathematical_expressions}{mathematical expressions} to get started writing math in LaTeX. Part 3 should be created using R Markdown or Quarto, so that all code needed to reproduce your results is included in the knitted document.
+
+\section{Cumulants and cumulant generating functions}
+
+\begin{enumerate}
+\item Let $Y$ be a random variable, and recall that the \textit{moment generating function} (MGF) of $Y$ is given by
+$$M(t) = \mathbb{E}[e^{tY}].$$
+We call $M$ the moment generating function because
+$$ \dfrac{d^k}{dt^k} M(t) \biggr \rvert_{t=0} = \mathbb{E}[Y^k].$$
+
+We also define the \textit{cumulant generating function} (CGF): $C(t) = \log M(t)$.
+
+\begin{enumerate}
+\item Show that
+$$ \dfrac{d}{dt} C(t) \biggr \rvert_{t=0} = \mathbb{E}[Y]. $$
+
+\item Show that
+$$ \dfrac{d^2}{dt^2} C(t) \biggr \rvert_{t=0} = Var(Y). $$
+\end{enumerate}
+\end{enumerate}
+
+\section{GLMs and the canonical link function}
+
+\begin{enumerate}
+\item[2.] Suppose we are interested in modeling a response variable $Y_i$, given explanatory variables $X_i$. We use the generalized linear model
+\begin{align*}
+Y_i &\sim EDM(\mu_i, \phi) \\
+g(\mu_i) &= \beta^T X_i,
+\end{align*}
+where $f(Y_i; \theta, \phi) = a(Y_i, \phi) \exp \left \lbrace \dfrac{Y_i \theta_i - \kappa(\theta_i)}{\phi} \right\rbrace$, and $g$ is the canonical link function (that is, $g(\mu_i) = \theta_i$, the canonical parameter). One reason the canonical link function is nice is that it makes Fisher scoring nice.
+
+\begin{enumerate}
+\item Show that the score function is $U(\beta) = \dfrac{X^T(Y - \bm{\mu})}{\phi}$, where $X$ is the design matrix, $Y = (Y_1,...,Y_n)^T$, and $\bm{\mu} = (\mu_1,...,\mu_n)^T$.
+
+\item Show that the Fisher information is $\mathcal{I}(\beta) = \dfrac{X^T V X}{\phi}$, where $V = \text{diag}(V(\mu_1),...,V(\mu_n))$, and $V(\mu_i) = Var(Y_i)/\phi$.
+\end{enumerate}
+\end{enumerate}
+
+\section{Practice with Poisson regression}
+
+Here we work with data on the number of articles published by biochemistry PhD students in the last three years of their PhD program. You can load the \verb;articles; data into R by
+
+\begin{verbatim}
+library(foreign)
+articles <- read.dta("http://www.stata-press.com/data/lf2/couart2.dta")
+\end{verbatim}
+
+\noindent The \verb;articles; dataset contains the following columns:
+
+\begin{itemize}
+\item \verb;art;: articles published in last three years of Ph.D.
+\item \verb;fem;: sex (recorded as male or female)
+\item \verb;mar;: marital status (recorded as married or single)
+\item \verb;kid5;: number of children under age six
+\item \verb;phd;: prestige of Ph.D. program
+\item \verb;ment;: articles published by their mentor in last three years
+\end{itemize}
+
+\noindent \textbf{Research question:} We are interested in estimating the relationship between prestige of the PhD program, and the number of articles published, after accounting for sex, marital status, children, and the productivity of their research mentor.
+
+\begin{enumerate}
+\item[3.] Here you will use Poisson regression to investigate this research question.
+
+\begin{enumerate}
+\item Write down a Poisson regression model that will allow you to answer the research question. Describe how you will use the model to answer the research question.
+\item Fit your model from (a), and report the equation of the fitted model. Interpret any estimated coefficients relevant to the research question.
+\item Model diagnostics for Poisson regression are similar to diagnostics for logistic and linear regression models.
+\begin{itemize}
+\item Create quantile residual plots to check the shape assumption for quantitative variables (you may use the \texttt{qresid} function in the \texttt{statmod} package)
+\item Calculate Cook's distance to check for any influential points (use a threshold of 0.5 or 1 to identify influential points)
+\item Calculate variance inflation factors to check for multicollinearity (see the \texttt{vif} function in the \texttt{car} package, and use a threshold of 5 or 10 to identify high multicollinearity). 
+\end{itemize}
+\item Address any violations to the model assumptions (transformations for shape violations; report results with and without influential points; and combine or remove columns for high multicollinearity). If you made any changes to your model, report and interpret your new fitted model here.
+\item If all model assumptions are satisfied, inference for Poisson regression models is similar to inference for logistic regression models (Wald or likelihood ratio tests can be used, and are calculated the same way). Carry out a hypothesis test to investigate the research question. You should:
+\begin{itemize}
+\item State the null and alternative hypotheses in terms of one or more $\beta$s
+\item Calculate a test statistic and p-value
+\item Make a conclusion in the context of the original question
+\end{itemize}
+\end{enumerate} 
+\end{enumerate}
+
+\end{document}

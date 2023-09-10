@@ -1,0 +1,29 @@
+---
+title: "Lecture 8"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Last time: Poisson regression
+
+
+## Exponential dispersion models
+
+
+## Examples of EDMs
+
+
+## EDM components
+
+
+## Cumulants and the cumulant generating function
+
+
+## Generalized linear models
+

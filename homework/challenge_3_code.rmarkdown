@@ -20,10 +20,10 @@ sba = pd.read_csv("https://sta712-f22.github.io/homework/sba_small.csv")
 sba['Amount'] = np.log(sba['GrAppv'])
 sba['Default'] = sba['MIS_Status'] == 'CHGOFF'
 
-encoder = OneHotEncoder(drop = 'first', sparse_output = False)
+encoder = OneHotEncoder(drop = 'first', sparse = False)
 sba_encoded = encoder.fit_transform(sba[['UrbanRural', 'NewExist']])
 
-sba_encoded = pd.DataFrame(sba_encoded, columns = encoder.get_feature_names_out(['UrbanRural', 'NewExist']))
+sba_encoded = pd.DataFrame(sba_encoded, columns = encoder.get_feature_names(['UrbanRural', 'NewExist']))
 sba_encoded['Amount'] = sba['Amount']
 
 # fitted values aren't exactly the same
@@ -38,7 +38,9 @@ m1.fit(sba_encoded, sba['Default'])
 normalize = False)
 ```
 
+
 Now let's see that we get similar coefficient estimates and deviance in Python using scikit-learn:
+
 
 ```{r}
 library(reticulate)
@@ -55,7 +57,9 @@ m2 <- glm(Default ~ UrbanRural + NewExist + Amount,
 summary(m2) # look, we get the same deviance!
 ```
 
+
 Ok, but sklearn is a module that is really more useful for prediction than for inference. Instead, we could use the statsmodels module, which can be used more similarly to R.
+
 
 ```{python}
 import statsmodels.api as sm
@@ -69,8 +73,10 @@ m3_results.deviance
 
 ```
 
+
 Think about why the coefficients for the intercept, NewExist1, and NewExist2 might have such large standard errors here (and hence why the estimates are so different between R, scikit-learn, and statsmodels). It is because there are very very few "unknown" NewExist observations. This means that we have a really big issue with multicollinearity in the data! We should probably remove those "unknown" observations, or recode.
 
 Next, try to make a quantile residual plot in python! You'll need to write your own function to create quantile residuals.
 
 numpy.random.uniform to sample from a uniform scipy.stats.norm.ppf for the inverse cdf part
+
