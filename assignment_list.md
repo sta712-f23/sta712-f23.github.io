@@ -24,3 +24,4 @@ description: >-
 
 * [HW 1](https://sta712-f23.github.io/homework/hw1.pdf)
 * [HW 2](https://sta712-f23.github.io/homework/hw2.pdf)
+* [HW 3](https://sta712-f23.github.io/homework/hw3.pdf)
