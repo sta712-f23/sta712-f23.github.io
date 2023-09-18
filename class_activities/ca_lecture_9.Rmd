@@ -28,7 +28,7 @@ where $Prestige_i$ is a numeric measurement of the prestige of the PhD program, 
 
 The variance-covariance matrix $Var(\widehat{\beta})$ is the inverse Fisher information. From lecture and HW, we know that the information matrix for an EDM with canonical link is
 
-$$\mathcal{I}(\beta) = \frac{1}{\phi^2} X^T W X$$
+$$I(\beta) = \frac{1}{\phi^2} X^T W X$$
 where $X$ is the design matrix and $W = diag(Var(Y_i))$. 
 
-3. Verify that, indeed, the variance-covariance matrix from question 2 is equal to $\mathcal{I}^{-1}(\beta)$.
+3. Verify that, indeed, the variance-covariance matrix from question 2 is equal to $I^{-1}(\beta)$.
