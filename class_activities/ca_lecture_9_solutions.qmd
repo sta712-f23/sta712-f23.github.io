@@ -1,0 +1,31 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+1.
+
+```{r}
+library(foreign)
+articles <- read.dta("http://www.stata-press.com/data/lf2/couart2.dta")
+
+m1 <- glm(art ~ phd + ment, data = articles, family = poisson)
+```
+
+2. 
+
+```{r}
+vcov(m1)
+```
+
+3. 
+
+```{r}
+x <- model.matrix(m1)
+w <- diag(m1$fitted.values)
+solve(t(x) %*% w %*% x)
+```
+
+

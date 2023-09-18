@@ -1,0 +1,34 @@
+---
+title: "Class Activity"
+output: 
+  tufte::tufte_html:
+    css: "lab.css"
+    tufte_variant: "envisioned"
+    highlight: pygments
+link-citations: yes
+---
+
+In this class activity, we will work with the `articles` data from HW 3 (see the homework assignment for a full description of the variables):
+
+```{r, eval=F}
+library(foreign)
+articles <- read.dta("http://www.stata-press.com/data/lf2/couart2.dta")
+```
+
+
+1. Fit the following Poisson regression model to predict the number of articles published in the last three years of the PhD (this may or may not correspond to a model from HW 2):
+
+$$Articles_i \sim Poisson(\lambda_i)$$
+
+$$\log(\lambda_i) = \beta_0 + \beta_1 Prestige_i + \beta_2 Mentor_i$$
+
+where $Prestige_i$ is a numeric measurement of the prestige of the PhD program, and $Mentor_i$ is the number of articles published by their PhD mentor in the last three years.
+
+2. Use the `vcov` function to extract the variance-covariance matrix for the estimated coefficients of your Poisson regression model.
+
+The variance-covariance matrix $Var(\widehat{\beta})$ is the inverse Fisher information. From lecture and HW, we know that the information matrix for an EDM with canonical link is
+
+$$\mathcal{I}(\beta) = \frac{1}{\phi^2} X^T W X$$
+where $X$ is the design matrix and $W = diag(Var(Y_i))$. 
+
+3. Verify that, indeed, the variance-covariance matrix from question 2 is equal to $\mathcal{I}^{-1}(\beta)$.

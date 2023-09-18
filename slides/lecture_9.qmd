@@ -1,0 +1,27 @@
+---
+title: "Lecture 9"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Recap: EDMs
+
+## Recap: properties of EDMs
+
+## Examples of EDMs
+
+## GLMs
+
+## Why abstraction is nice
+
+## Why abstraction is nice
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_9.html](https://sta712-f23.github.io/class_activities/ca_lecture_9.html)

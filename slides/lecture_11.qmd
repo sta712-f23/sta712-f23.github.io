@@ -1,0 +1,206 @@
+---
+title: "Lecture 11"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Recap: estimating $\phi$
+
+## Recap: Inference when $\phi$ is known
+
+## Inference when $\phi$ is unknown
+
+## Data
+
+2015 Family Income and Expenditure Survey (FIES) on households in the Phillipines. Variables include
+
+* `age`: age of the head of household
+* `numLT5`: number in the household under 5 years old
+* `total`: total number of people other than head of household
+* `roof`: type of roof (stronger material can sometimes be used as a proxy for greater wealth)
+* `location`: where the house is located (Central Luzon, Davao Region, Ilocos Region, Metro Manila, or Visayas)
+
+
+## Poisson regression model
+
+$Y_i =$ number of people in household other than head
+
+$$Y_i \sim Poisson(\lambda_i)$$
+
+$$\log(\lambda_i) = \beta_0 + \beta_1 Age_i$$
+
+## Model assumptions
+
+$Y_i =$ number of people in household other than head
+
+$$Y_i \sim Poisson(\lambda_i)$$
+
+$$\log(\lambda_i) = \beta_0 + \beta_1 Age_i$$
+
+**Question:** What assumptions does this Poisson regression model make?
+
+## Model assumptions
+
+$Y_i =$ number of people in household other than head
+
+$$Y_i \sim Poisson(\lambda_i)$$
+
+$$\log(\lambda_i) = \beta_0 + \beta_1 Age_i$$
+
+* **Shape:** The shape of the regression model is correct 
+* **Independence:** The observations are independent
+* **Poisson distribution:** A Poisson distribution is a good choice for $Y_i$
+
+**Question:** How could I assess these assumptions?
+
+## Shape: log empirical means plot
+
+```{r include=F}
+library(tidyverse)
+fies <- read_csv("~/Documents/Teaching/sta214-f22.github.io/slides/fies.csv")
+
+fies %>%
+  ggplot(aes(x = `Total Number of Family members` - 1)) +
+  geom_bar() +
+  labs(x = "Number of family members") +
+  theme_bw() +
+  theme(text = element_text(size = 25))
+
+fies <- fies %>%
+  mutate(total = `Total Number of Family members`,
+         age = `Household Head Age`)
+```
+
+```{r echo=F, message=FALSE, warning=F, fig.align='center', fig.width=7, fig.height=5}
+set.seed(6)
+fies %>%
+  group_by(age) %>%
+  summarize(emp_mean = log(mean(total)),
+            age_mean = mean(age)) %>%
+  ungroup() %>%
+  ggplot(aes(x = age_mean, y = emp_mean)) +
+  geom_jitter(size = 2, width=0.3, height=0.3) +
+  labs(x = "Age", y = "log(Average number of people)") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+```
+
+## Shape: log empirical means plot
+
+```{r echo=F, message=FALSE, warning=F, fig.align='center', fig.width=7, fig.height=5}
+set.seed(6)
+fies %>%
+  group_by(age) %>%
+  summarize(emp_mean = log(mean(total)),
+            age_mean = mean(age)) %>%
+  ungroup() %>%
+  ggplot(aes(x = age_mean, y = emp_mean)) +
+  geom_jitter(size = 2, width=0.3, height=0.3) +
+  labs(x = "Age", y = "log(Average number of people)") +
+  theme_bw() +
+  theme(text = element_text(size = 20)) +
+  geom_smooth(se=F, method="lm", formula = y ~ poly(x,2), lwd=1.2)
+```
+
+## Shape: quantile residual plot
+
+```{r, eval=F}
+m1 <- glm(total ~ age, 
+          data = fies, family = poisson)
+m2 <- glm(total ~ poly(age, 2), 
+          data = fies, family = poisson)
+```
+
+```{r echo=F, message=FALSE, warning=F, fig.align='center', fig.width=10, fig.height=4}
+library(statmod)
+library(gridExtra)
+m1 <- glm(total ~ age, 
+          data = fies, family = poisson)
+m2 <- glm(total ~ poly(age, 2), 
+          data = fies, family = poisson)
+p1 <- fies %>%
+  mutate(resids = qresid(m1)) %>%
+  ggplot(aes(x = age, y = resids)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "Age", y = "Quantile residuals", 
+       title = "No transformation on Age")
+p2 <- fies %>%
+  mutate(resids = qresid(m2)) %>%
+  ggplot(aes(x = age, y = resids)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "Age", y = "Quantile residuals", 
+       title = "Second order polynomial")
+grid.arrange(p1, p2, ncol=2)
+```
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_11.html](https://sta712-f23.github.io/class_activities/ca_lecture_11.html)
+
+
+## Class activity
+
+```{r, echo=F, message=FALSE, warning=F, fig.align='center', fig.width=10, fig.height=7}
+set.seed(1)
+r <- 0.5
+n <- 1000
+x <- rnorm(n, sd = 0.5)
+y1 <- rpois(n, lambda = exp(x))
+y2 <- rpois(n, lambda = exp(x^2))
+y3 <- rnbinom(n, size=r, mu=exp(x))
+y4 <- rnbinom(n, size=r, mu=exp(x^2))
+
+m1 <- glm(y1 ~ x, family = poisson)
+m2 <- glm(y2 ~ x, family = poisson)
+m3 <- glm(y3 ~ x, family = poisson)
+m4 <- glm(y4 ~ x, family = poisson)
+
+p1 <- data.frame(x = x, resids = qresid(m1)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "Age", y = "Quantile residuals", 
+       title = "Poisson data, shape assumption satisfied") +
+  scale_y_continuous(limits=c(-3, 6))
+p2 <- data.frame(x = x, resids = qresid(m2)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "Age", y = "Quantile residuals", 
+       title = "Poisson data, shape assumption violated") +
+  scale_y_continuous(limits=c(-3, 6))
+p3 <- data.frame(x = x, resids = qresid(m3)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "Age", y = "Quantile residuals", 
+       title = "Non-Poisson data, shape assumption satisfied") +
+  scale_y_continuous(limits=c(-3, 6))
+p4 <- data.frame(x = x, resids = qresid(m4)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "Age", y = "Quantile residuals", 
+       title = "Non-Poisson data, shape assumption violated") +
+  scale_y_continuous(limits=c(-3, 6))
+
+grid.arrange(p1, p2, p3, p4, ncol=2)
+```
+
+## Using quantile residual plots
+
+We can use the quantile residual plot to assess the shape and distribution assumptions:

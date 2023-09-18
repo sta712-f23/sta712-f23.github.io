@@ -1,0 +1,23 @@
+---
+title: "Lecture 10"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Recap: Likelihood ratio tests
+
+## Deviance and dispersion model form
+
+## Likelihood ratio tests when $\varphi$ is known
+
+## Estimating $\varphi$
+
+## Distributions of $\widehat{\varphi}$
+
+## Saddlepoint approximation

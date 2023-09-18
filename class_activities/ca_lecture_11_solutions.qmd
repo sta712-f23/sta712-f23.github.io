@@ -1,0 +1,68 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+1.
+
+```{r, message=F, warning=F}
+library(statmod)
+library(tidyverse)
+
+n <- 1000
+x <- rnorm(n, sd = 0.5)
+y1 <- rpois(n, lambda = exp(x))
+
+m1 <- glm(y1 ~ x, family = poisson)
+
+data.frame(x = x, resids = qresid(m1)) |>
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "x", y = "Quantile residuals") 
+```
+
+When the Poisson regression assumptions are satisfied, the quantile residual plot looks like we would expect: the residuals are mostly between -2 and 2, they are randomly scattered around 0 with no clear pattern, and the variance seems constant.
+
+2. 
+
+```{r, warning=F, message=F}
+n <- 1000
+x <- rnorm(n, sd = 0.5)
+y2 <- rnbinom(n, size=0.5, mu=exp(x))
+
+m2 <- glm(y2 ~ x, family = poisson)
+
+data.frame(x = x, resids = qresid(m2)) |>
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "x", y = "Quantile residuals") 
+```
+
+Breaking the Poisson distribution assumption, we can see that there is a lot more variability to the residuals, and the variance appears to change with x.
+
+3. 
+
+```{r, message=F, warning=F}
+n <- 1000
+x <- rnorm(n, sd = 0.5)
+y1 <- rpois(n, lambda = exp(x^2))
+
+m1 <- glm(y1 ~ x, family = poisson)
+
+data.frame(x = x, resids = qresid(m1)) |>
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(x = "x", y = "Quantile residuals") 
+```
+
+Breaking the shape assumption, there is a clear pattern to the quantile residual plot. The u-shape indicates that we may need to consider a quadratic function of x.
+
+4. Changes in variance indicate potential violations of the distribution assumption. Patterns indicate potential violations of the shape assumption.
