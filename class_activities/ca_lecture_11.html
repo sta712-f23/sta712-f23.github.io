@@ -1727,11 +1727,9 @@ model would be</p>
 <p>First, let’s verify that this matches with the residual deviance that
 R reports in the GLM output. Load the dengue data into R, and fit the
 following model. What is the residual deviance?</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(ROCR)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>dengue <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;https://sta279-s22.github.io/labs/dengue.csv&quot;</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue, <span class="at">family =</span> binomial)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>dengue <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;https://sta279-s22.github.io/labs/dengue.csv&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Dengue <span class="sc">~</span> Age <span class="sc">+</span> WBC <span class="sc">+</span> PLT, <span class="at">data =</span> dengue, <span class="at">family =</span> binomial)</span></code></pre></div>
 </div>
 <div id="question-2" class="section level4 question">
 <h4>Question 2</h4>

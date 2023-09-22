@@ -40,8 +40,6 @@ $$-2 \log L = -2 \sum \limits_{i=1}^n (Y_i \log \widehat{p}_i + (1 - Y_i) \log(1
 First, let's verify that this matches with the residual deviance that R reports in the GLM output. Load the dengue data into R, and fit the following model. What is the residual deviance?
 
 ```r
-library(tidyverse)
-library(ROCR)
 dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
 
 m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, family = binomial)

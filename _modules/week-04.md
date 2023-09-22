@@ -12,7 +12,7 @@ September 20
   
 September 22
 : Deviance
-  : [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_11.html)
+  : [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_11.html), [Class activity solutions](https://sta712-f23.github.io/class_activities/ca_lecture_11_solutions.html)
 
 : **Homework 4 released**{: .label .label-yellow }
-
+  : [HW 4](https://sta712-f23.github.io/homework/hw4.pdf)

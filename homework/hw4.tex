@@ -1,0 +1,69 @@
+\documentclass[11pt]{article}
+\usepackage{url}
+\usepackage{alltt}
+\usepackage{bm}
+\linespread{1}
+\textwidth 6.5in
+\oddsidemargin 0.in
+\addtolength{\topmargin}{-1in}
+\addtolength{\textheight}{2in}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{hyperref}
+
+\begin{document}
+
+
+\begin{center}
+\Large
+STA 712 Homework 4\\
+\normalsize
+\vspace{5mm}
+\end{center}
+
+\noindent \textbf{Due:} Friday, October 6, 12:00pm (noon) on Canvas.\\ 
+
+\noindent \textbf{Instructions:} Submit your work as a single PDF, created using LaTeX; see the course website for a \href{https://sta712-f23.github.io/homework/hw_template.tex}{homework template file} and \href{https://sta712-f23.github.io/homework/latex_instructions/}{instructions} on getting started with LaTeX and Overleaf. See the Overleaf guide on \href{https://www.overleaf.com/learn/latex/Mathematical_expressions}{mathematical expressions} to get started writing math in LaTeX.
+
+\section*{Practice with exponential dispersion models}
+
+\begin{enumerate}
+\item[1.] Suppose $Y \sim Gamma(\alpha, \beta)$, with shape $\alpha > 0$ and scale $\beta > 0$. The density function for $Y$ is given by
+$$f(y; \alpha, \beta) = \dfrac{y^{\alpha - 1}}{\Gamma(\alpha) \beta^\alpha} \exp \{ -y/\beta\}.$$
+
+\begin{enumerate}
+\item Show that the gamma distribution is an EDM by identifying $\theta$, $\kappa(\theta)$, and $\phi$.
+
+\item Find $\mu = \mathbb{E}[Y]$ as a function of $\alpha$ and $\beta$ by using the fact that $\mu = \dfrac{\partial}{\partial \theta} \kappa(\theta)$.
+
+\item Using (b), what is the canonical link function for the gamma distribution?
+
+\item Using the fact that $Var(Y) = \phi \cdot \dfrac{\partial \mu}{\partial \theta} = \phi \cdot V(\mu)$, find $V(\mu)$ as a function of $\mu$, and find $Var(Y)$ as a function of $\alpha$ and $\beta$.
+
+\item Show that the unit deviance for the gamma distribution is
+$$d(y, \mu) = 2 \left( - \log \frac{y}{\mu} + \frac{y - \mu}{\mu} \right).$$
+
+\item Write the density function for $Y$ in dispersion model form.
+\end{enumerate}
+
+\item[2.] A very cool property of EDMs is that the mean-variance relationship encoded by $V(\mu)$ uniquely determines the EDM. For example, a normal distribution is the only EDM for which $V(\mu) = 1$, a Poisson distribution is the only EDM for which $V(\mu) = \mu$, etc. This means that, given a desired mean-variance relationship, we can work backwards to figure out what the EDM should be!\\
+
+Suppose we are told that $Y \sim EDM(\mu, \phi)$, and we know that $V(\mu) = \mu^3$. In this problem, we will derive the corresponding EDM for $Y$.
+
+\begin{enumerate}
+\item Using the fact that $V(\mu) = \frac{\partial \mu}{\partial \theta}$, find $\theta$ as a function of $\mu$. \textit{Hint: recall from calculus that} $\dfrac{\partial \theta}{\partial \mu} = \dfrac{1}{\partial \mu / \partial \theta} = \mu^{-3}$.
+
+\item Using the fact that $\mu = \frac{\partial \kappa(\theta)}{\partial \theta}$, show that $\kappa(\theta) = - \sqrt{- 2 \theta} = -\dfrac{1}{\mu}$.
+
+\item Conclude that $f(y; \mu, \phi) = a(y, \phi) \exp \left \lbrace \dfrac{-y/(2 \mu^2) + 1/\mu}{\phi} \right\rbrace$. Then rearrange to show that 
+$$f(y; \mu, \phi) = b(y, \phi) \exp \left \lbrace -\dfrac{1}{2\phi}\dfrac{(y - \mu)^2}{y \mu^2} \right\rbrace. $$\\
+\end{enumerate}
+
+The density function of an inverse Gaussian distribution is given by
+$$f(y; \mu, \phi) = (2 \pi y^3 \phi)^{-1/2} \exp \left \lbrace -\dfrac{1}{2\phi}\dfrac{(y - \mu)^2}{y \mu^2} \right\rbrace, $$
+so we have shown that if $V(\mu) = \mu^3$, then $Y$ must have an inverse Gaussian distribution!
+\end{enumerate}
+
+\end{document}

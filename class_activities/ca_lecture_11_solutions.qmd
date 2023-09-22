@@ -5,64 +5,112 @@ editor: source
 author: "Ciaran Evans"
 ---
 
-1.
+1. 
 
-```{r, message=F, warning=F}
-library(statmod)
-library(tidyverse)
+```{r}
+dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
 
-n <- 1000
-x <- rnorm(n, sd = 0.5)
-y1 <- rpois(n, lambda = exp(x))
-
-m1 <- glm(y1 ~ x, family = poisson)
-
-data.frame(x = x, resids = qresid(m1)) |>
-  ggplot(aes(x = x, y = resids)) +
-  geom_point() +
-  geom_smooth() +
-  theme_bw() +
-  labs(x = "x", y = "Quantile residuals") 
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, family = binomial)
+m1$deviance
 ```
 
-When the Poisson regression assumptions are satisfied, the quantile residual plot looks like we would expect: the residuals are mostly between -2 and 2, they are randomly scattered around 0 with no clear pattern, and the variance seems constant.
+The residual deviance is 5200.823
 
 2. 
 
-```{r, warning=F, message=F}
-n <- 1000
-x <- rnorm(n, sd = 0.5)
-y2 <- rnbinom(n, size=0.5, mu=exp(x))
+```{r}
+-2*sum(m1$y * log(m1$fitted.values/(1 - m1$fitted.values)) + log(1 - m1$fitted.values))
 
-m2 <- glm(y2 ~ x, family = poisson)
-
-data.frame(x = x, resids = qresid(m2)) |>
-  ggplot(aes(x = x, y = resids)) +
-  geom_point() +
-  geom_smooth() +
-  theme_bw() +
-  labs(x = "x", y = "Quantile residuals") 
 ```
 
-Breaking the Poisson distribution assumption, we can see that there is a lot more variability to the residuals, and the variance appears to change with x.
+It matches!
 
 3. 
 
-```{r, message=F, warning=F}
-n <- 1000
-x <- rnorm(n, sd = 0.5)
-y1 <- rpois(n, lambda = exp(x^2))
-
-m1 <- glm(y1 ~ x, family = poisson)
-
-data.frame(x = x, resids = qresid(m1)) |>
-  ggplot(aes(x = x, y = resids)) +
-  geom_point() +
-  geom_smooth() +
-  theme_bw() +
-  labs(x = "x", y = "Quantile residuals") 
+```{r}
+y <- 0
+p <- seq(0, 1, 0.01)
+plot(p, y*log(p/(1 - p)) + log(1-p))
 ```
 
-Breaking the shape assumption, there is a clear pattern to the quantile residual plot. The u-shape indicates that we may need to consider a quadratic function of x.
+If $y = 0$, the maximum of $y \log \left( \frac{p}{1 - p} \right) + \log(1 - p)$ occurs at $p = 0$.
 
-4. Changes in variance indicate potential violations of the distribution assumption. Patterns indicate potential violations of the shape assumption.
+```{r}
+y <- 1
+p <- seq(0, 1, 0.01)
+plot(p, y*log(p/(1 - p)) + log(1-p))
+```
+
+If $y = 1$, the maximum of $y \log \left( \frac{p}{1 - p} \right) + \log(1 - p)$ occurs at $p = 1$.
+
+4. 
+
+$$-2 \sum \limits_{i=1}^n \left( Y_i \log \left( \frac{\widehat{p}_i}{1 - \widehat{p}_i} \right) + \log(1 - \widehat{p}_i) \right)$$
+
+The inner term $Y_i \log \left( \frac{\widehat{p}_i}{1 - \widehat{p}_i} \right) + \log(1 - \widehat{p}_i)$ is greater when $\widehat{p}_i$ is closer to $Y_i$ (see question 3). Since there is a negative sign out the front, the deviance is smaller when $\widehat{p}_i$ is closer to $Y_i$, so the deviance measures how close the predictions are (overall) to the observed data.
+
+5. 
+
+```{r}
+y <- 5
+lambda <- seq(1, 10, 0.1)
+plot(lambda, y*log(lambda) - lambda)
+```
+
+The maximum occurs at $\lambda = 5$.
+
+6. 
+
+$t(y, \mu) = y \log \mu - \mu$, so $t(y, y) = y \log y - y$. Then,
+
+$$d(y, \mu) = 2(y \log y - y - y \log \mu + \mu) = 2 \left( y \log \left( \frac{y}{\mu} \right) - (y - \mu) \right)$$
+
+7. 
+
+```{r}
+y <- 5
+mu <- seq(1, 10, 0.1)
+d <- 2*(y*log(y/mu) - (y - mu))
+plot(mu, d)
+
+d[which.min(d)]
+mu[which.min(d)]
+```
+
+
+8. 
+
+```{r}
+library(foreign)
+articles <- read.dta("http://www.stata-press.com/data/lf2/couart2.dta")
+
+m2 <- glm(art ~ phd + ment, data = articles, family = poisson)
+m2$deviance
+```
+
+
+The residual deviance is 1669.352
+
+9. 
+
+```{r}
+2*sum(m2$y * log(m2$y/m2$fitted.values), na.rm=T) - 2*sum(m2$y - m2$fitted.values)
+```
+
+10.
+
+```{r}
+2*(sum(log(1/factorial(m2$y))) + 
+     sum(m2$y * log(m2$y) - m2$y,na.rm=T) - 
+  (sum(log(1/factorial(m2$y))) + 
+     sum(m2$y * log(m2$fitted.values) - m2$fitted.values)))
+```
+
+11. 
+
+$$\log L = \sum \limits_{i=1}^n (Y_i \log \widehat{p}_i + (1 - Y_i) \log(1 - \widehat{p}_i))$$
+
+so for the saturated model,
+
+$$\log L_{saturated} = \sum \limits_{i=1}^n (Y_i \log Y_i + (1 - Y_i) \log(1 - Y_i)) = 0$$
+
