@@ -11,8 +11,8 @@ September 20
   : [slides (html)](https://sta712-f23.github.io/slides/lecture_10.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_10.pdf)
   
 September 22
-: Model diagnostics
-  : [slides (html)](https://sta712-f23.github.io/slides/lecture_11.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_11.pdf), [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_11.html), [Class activity solutions](https://sta712-f23.github.io/class_activities/ca_lecture_11_solutions.html)
+: Deviance
+  : [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_11.html)
 
 : **Homework 4 released**{: .label .label-yellow }
 

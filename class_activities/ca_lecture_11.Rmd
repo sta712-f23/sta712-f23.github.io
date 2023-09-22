@@ -1,68 +1,226 @@
 ---
 title: "Class Activity"
 output: 
-  tufte::tufte_html:
-    css: "lab.css"
-    tufte_variant: "envisioned"
+  rmdformats::robobook:
+    css: "homework.css"
     highlight: pygments
 link-citations: yes
 ---
 
-# Exploring quantile residual plots
+# Deviance
 
-In linear regression, residuals can be used to assess the shape, constant variance, and normality assumptions. In Poisson regression, we can use quantile residuals to assess both the shape and Poisson distribution assumptions. The purpose of this class activity is to explore how quantile residual plots can diagnose violations of the Poisson regression assumptions.
+## Likelihood ratio tests
 
-## Questions
+Recall that the likelihood ratio test to compare two nested models uses the test statistic
 
-To begin, let's generate data from the model
+$$G = 2 \log \left( \frac{L_{full}}{L_{reduced}} \right) = 2(\log L_{full} - \log L_{reduced})$$
+Under appropriate regularity conditions, as discussed in STA 711, the test statistic is asymptotically $\chi^2$.
 
-$$X_i \sim N(0, 0.5)$$
-$$\log(\lambda_i) = X_i$$
-$$Y_i \sim Poisson(\lambda_i)$$
-Note that the Poisson regression assumptions are satisfied for this model.
+When implementing the likelihood ratio test with logistic regression models, we have compared the *residual deviance* of the reduced and full models. Indeed, *for binary logistic regression*, the residual deviance is $-2 \log L$, so the likelihood ratio statistic becomes
 
-1. Run the code below to generate data from this model, fit the Poisson regression model in R, and create a quantile residual plot:
+$$G = \text{Residual Deviance}_{reduced} - \text{Residual Deviance}_{full}$$
 
-```{r, eval=F}
-library(statmod)
+This leads to the question: what *is* deviance? And can we define deviance more generally, e.g. for a Poisson regression model?
+
+## What is deviance?
+
+We know that the residual deviance, for a binary logistic regression model, is twice the negative log-likelihood. Suppose we observe data $(X_1, Y_1),...,(X_n, Y_n)$, and fit the logistic regression model 
+
+$$Y_i \sim Bernoulli(p_i)$$
+
+$$\log \left( \frac{p_i}{1 - p_i} \right) = \beta^T X_i$$
+
+Then, using the Bernoulli pmf, the residual deviance for the fitted model would be
+
+$$-2 \log L = -2 \sum \limits_{i=1}^n (Y_i \log \widehat{p}_i + (1 - Y_i) \log(1 - \widehat{p}_i)) = -2 \sum \limits_{i=1}^n \left( Y_i \log \left( \frac{\widehat{p}_i}{1 - \widehat{p}_i} \right) + \log(1 - \widehat{p}_i) \right)$$
+
+:::{.question}
+#### Question 1
+
+First, let's verify that this matches with the residual deviance that R reports in the GLM output. Load the dengue data into R, and fit the following model. What is the residual deviance?
+
+```r
 library(tidyverse)
+library(ROCR)
+dengue <- read.csv("https://sta279-s22.github.io/labs/dengue.csv")
 
-n <- 1000
-x <- rnorm(n, sd = 0.5)
-y1 <- rpois(n, lambda = exp(x))
-
-m1 <- glm(y1 ~ x, family = poisson)
-
-data.frame(x = x, resids = qresid(m1)) |>
-  ggplot(aes(x = x, y = resids)) +
-  geom_point() +
-  geom_smooth() +
-  theme_bw() +
-  labs(x = "x", y = "Quantile residuals") 
+m1 <- glm(Dengue ~ Age + WBC + PLT, data = dengue, family = binomial)
 ```
+:::
+
+:::{.question}
+#### Question 2
+
+Now compute the residual deviance yourself using the formula above, and confirm that it matches the R output. You can extract the estimated probabilities $\widehat{p}_i$ with `m1$fitted.values`.
+:::
 
 
-Now what happens if we change the distribution of $Y$? The negative binomial distribution is another count distribution, which is different from the Poisson (we will see much more of the negative binomial later!). Let's generate negative binomial data (violating the Poisson distribution assumption), and see how the quantile residual plot changes.
+## Generalizing the idea of deviance
 
-2. Run the code below to generate negative binomial data, fit a Poisson regression model, and make a quantile residual plot. What differences do you see in your plot compared to question 1?
+To generalize the linear and logistic regression models to other response distributions, we introduced *exponential dispersion models*. Recall that the probability function for an exponential dispersion model (EDM) with canonical parameter $\theta$ and dispersion parameter $\phi$ can be written
+
+$$f(y; \theta, \phi) = a(y, \phi) \exp \left\lbrace \frac{y\theta - \kappa(\theta)}{\phi} \right\rbrace.$$
+For the binary logistic regression model, for example, $\phi = 1$, $a(y, \phi) = 1$, and $y\theta - \kappa(\theta) = y \log \left( \frac{p}{1 - p} \right) + \log(1 - p)$. This is starting to look like the residual deviance for binary logistic regression that we had above!
+
+Let's look a bit more at the $y\theta - \kappa(\theta)$ term.
+
+:::{.question}
+#### Question 3
+
+For a Bernoulli distribution, $y\theta - \kappa(\theta) = y \log \left( \frac{p}{1 - p} \right) + \log(1 - p)$. The two possible values of $y$ are 0 and 1.
+
+For $y = 0$, plot $y \log \left( \frac{p}{1 - p} \right) + \log(1 - p)$ as a function of $p \in [0, 1]$. What value of $p$ maximizes this function?
+
+Repeat for $y = 1$. Now what value of $p$ maximizes $y \log \left( \frac{p}{1 - p} \right) + \log(1 - p)$?
+:::
+
+
+:::{.question}
+#### Question 4
+
+Now think about a binary logistic regression model, with estimated probabilities $\widehat{p}_i$. Explain why
+
+$$-2 \sum \limits_{i=1}^n \left( Y_i \log \left( \frac{\widehat{p}_i}{1 - \widehat{p}_i} \right) + \log(1 - \widehat{p}_i) \right)$$
+
+will be smaller if the $\widehat{p}_i$ are "closer" to the $Y_i$. (In other words, the residual deviance for a binary logistic regression model *provides a measure of distance* between the predicted probabilities $\widehat{p}_i$, and the observed responses $Y_i$).
+:::
+
+:::{.question}
+#### Question 5
+
+What about a Poisson distribution, $Y \sim Poisson(\lambda)$? As we have previously found in class, 
+$$y\theta - \kappa(\theta) = y \log \lambda - \lambda$$
+and $y \in \{0, 1, 2, ...\}$.
+
+Suppose $y = 5$. Plot $y \log \lambda - \lambda$ as a function of $\lambda$. Where does this function attain its maximum?
+:::
+
+
+More generally, if $Y \sim EDM(\mu, \phi)$ then $\mathbb{E}[Y] = \mu = g^{-1}(\theta)$, where $g$ is the canonical link function. Let
+$$t(y, \mu) = y \theta - \kappa(\theta),$$
+and consider $t(y, \mu)$ as a function of $\mu$, just like we did in questions 3--5! That is, if I don't know $\mu$ and I want an estimate, I would like $\mu$ to be close to the observed data $y$. For a GLM,
+$$Y_i \sim EDM(\mu_i, \phi)$$
+$$g(\mu_i) = \beta^T X_i$$
+and $\widehat{\mu}_i = g^{-1}(\widehat{\beta}^T X_i)$.
+
+So, we are trying to find the coefficients $\widehat{\beta}$ which make $\widehat{\mu}_i$ as close to the observed data as possible! In other words, which make $t(Y_i, \widehat{\mu}_i)$ large.
+
+
+Since $\frac{\partial}{\partial \theta} \kappa(\theta) = \mu$ and $\frac{\partial}{\partial \theta} \mu = V(\mu) \geq 0$, then $t(y, \mu)$ has a *maximum* at $\mu = y$, as we saw above. That is, $t(y, y) > t(y, \mu)$ if $\mu \neq y$ (intuition: we match the observed data as close as possible when $\widehat{\mu}_i = Y_i$).
+
+Then, $t(y, y) - t(y, \mu)$ measures how *far away* $\mu$ is from $y$. That is, we would like $t(Y_i, Y_i) - t(Y_i, \widehat{\mu}_i)$ to be close to 0.
+
+Let $d(y, \mu) = 2(t(y, y) - t(y, \mu))$. We call $d(y, \mu)$ the *unit (unscaled) deviance*, and it measures how far $\mu$ is from $y$ (i.e., how much $\mu$ *deviates* from the observed data $y$). Rewriting the exponential dispersion model by adding and subtracting $t(y, y)$, we get
+
+$$f(y; \theta, \phi) = a(y, \phi) \exp \left\lbrace \frac{y\theta - \kappa(\theta)}{\phi} \right\rbrace = a(y, \phi) \exp \left\lbrace \frac{t(y, \mu)}{\phi} \right\rbrace$$
+$$= a(y, \phi)\exp \left\lbrace \frac{t(y, \mu) - t(y, y) + t(y, y)}{\phi} \right\rbrace = a(y, \phi)\exp \left\lbrace \frac{t(y,y)}{\phi} \right\rbrace \exp \left\lbrace \frac{t(y, \mu) - t(y, y) }{\phi} \right\rbrace$$
+$$= b(y, \phi) \exp \left\lbrace \frac{-d(y, \mu) }{2\phi} \right\rbrace$$
+That is, likelihood is maximized when $t(y, \mu)$ is large, or equivalently when $d(y, \mu)$ is small.
+
+## Unit deviance and Poisson regression
+
+:::{.question}
+#### Question 6
+
+Show that, if $Y \sim Poisson(\mu)$, then 
+$$d(y, \mu) = 2 \left( y \log \left( \frac{y}{\mu} \right) - (y - \mu) \right)$$.
+:::
+
+:::{.question}
+#### Question 7
+
+Let $y = 5$, and plot $d(y, \mu)$ from question 6. Verify that $d(5, 5) = 0$, and that $d(5, \mu) > 0$ for $\mu \neq 5$.
+:::
+
+## The residual deviance
+
+If the unit (unscaled) deviance $d(y, \mu)$ measures how far $\mu$ is from $y$, then the *residual* deviance $D(Y, \widehat{\mu})$ measures how far a fitted model is from the observed data:
+
+**Residual deviance:** $D(Y, \widehat{\mu}) = \sum \limits_{i=1}^n d(Y_i, \widehat{\mu}_i)$
+
+**Scaled residual deviance:** $D^*(Y, \widehat{\mu}) = \frac{1}{\phi} \sum \limits_{i=1}^n d(Y_i, \widehat{\mu}_i)$
+
+Note that for the binomial and Poisson distributions, $\phi = 1$, so the residual deviance and scaled residual deviance are the same. For Poisson regression, e.g., the residual deviance is
+
+$D^*(Y, \widehat{\mu}) =  D(Y, \widehat{\mu}) = \sum \limits_{i=1}^n d(Y_i, \widehat{\mu}_i) = 2 \sum \limits_{i=1}^n  \left( Y_i \log \left( \frac{Y_i}{\widehat{\mu}_i} \right) - (Y_i - \widehat{\mu}_i) \right)$
+
+Now let's verify that the residual deviance does indeed match up with what we get from R!
+
+:::{.question}
+#### Question 8
+
+Fit the following Poisson regression model in R, on the `articles` data, and report the residual deviance.
+
+```r
+library(foreign)
+articles <- read.dta("http://www.stata-press.com/data/lf2/couart2.dta")
+
+m2 <- glm(art ~ phd + ment, data = articles, family = poisson)
+```
+:::
+
+:::{.question}
+#### Question 9
+
+Using your fitted model, calculate the residual deviance with 
+
+$$D(Y, \widehat{\mu}) = 2 \sum \limits_{i=1}^n  \left( Y_i \log \left( \frac{Y_i}{\widehat{\mu}_i} \right) - (Y_i - \widehat{\mu}_i) \right)$$
+
+Verify that you get the same result as in question 8.
+
+**Note:** use the convention that $0 \log 0 = 0$.
+:::
+
+## Another view of deviance
+
+For binary logistic regression, deviance is equivalent to $-2 \log L$ for the fitted model. Is this always true?
+
+No! To see this, let's calculate $-2 \log L$ for the Poisson model in question 8. Run the following code, and see that the result is not the residual deviance from above:
 
 ```{r, eval=F}
-n <- 1000
-x <- rnorm(n, sd = 0.5)
-y2 <- rnbinom(n, size=0.5, mu=exp(x))
-
-m2 <- glm(y2 ~ x, family = poisson)
-
-data.frame(x = x, resids = qresid(m2)) |>
-  ggplot(aes(x = x, y = resids)) +
-  geom_point() +
-  geom_smooth() +
-  theme_bw() +
-  labs(x = "x", y = "Quantile residuals") 
+-2*(sum(log(1/factorial(m2$y))) + 
+      sum(m2$y * log(m2$fitted.values) - m2$fitted.values))
 ```
 
-Finally, let's try violating the shape assumption with Poisson data. 
+Ok, so then how exactly is deviance related to the log-likelihood? In general, 
 
-3. Modify your code from question 1 to violate the shape assumption, but not the Poisson distribution assumption. What differences do you see in your plot compared to question 1?
+$$\text{Residual deviance} = 2(\log L_{saturated} - \log L_{fitted})$$
+where $L_{saturated}$ is the likelihood of the *saturated* model, and $L_{fitted}$ is the likelihood of the *fitted* model.
 
-4. Summarize how quantile residual plots can be used to identify issues with the Poisson regression assumptions.
+The **saturated** model is the one for which $\widehat{\mu}_i = Y_i$ for all $i = 1,...,n$ (i.e., we have completely overfit the model, and our predictions are identical to the observed data). The **fitted** model is the one we actually fit: $\widehat{\mu}_i = g^{-1}(\widehat{\beta}^T X_i)$.
+
+:::{.question}
+#### Question 10
+
+Compute $2(\log L_{saturated} - \log L_{fitted})$ for the fitted Poisson regression model above, and verify it agrees with the residual deviance.
+:::
+
+:::{.question}
+#### Question 11
+
+Show that, for binary logistic regression, $\log L_{saturated} = 0$, which explains why the residual deviance is equal to $-2 \log L_{fitted}$ for binary logistic regression.
+:::
+
+## Deviance and likelihood ratio tests
+
+Finally, let's circle back to likelihood ratio tests, one of our initial motivations for deviance. Suppose we have two models, a reduced model and a full model, which we wish to compare. Using the dispersion model form (the one which includes the deviance):
+
+$\log L_{full} = \sum \limits_{i=1}^n \log(b(Y_i, \phi)) - \sum \limits_{i=1}^n \frac{d(Y_i, \widehat{\mu}_{i, full})}{2\phi}$
+
+$\log L_{reduced} = \sum \limits_{i=1}^n \log(b(Y_i, \phi)) - \sum \limits_{i=1}^n \frac{d(Y_i, \widehat{\mu}_{i, reduced})}{2\phi}$
+
+So,
+
+$$2(\log L_{full} - \log L_{reduced}) = 2\left( \sum \limits_{i=1}^n \frac{d(Y_i, \widehat{\mu}_{i, reduced})}{2\phi} - \sum \limits_{i=1}^n \frac{d(Y_i, \widehat{\mu}_{i, full})}{2\phi} \right) \\= \frac{D(Y, \widehat{\mu}_{reduced}) - D(Y, \widehat{\mu}_{full})}{\phi}$$
+
+In other words, we can compare the (scaled) residual deviances to compute our likelihood ratio statistic!
+
+## Looking forward
+
+Honestly, calculating log likelihoods isn't much different from calculating deviances. So, why is residual deviance a useful concept?? A few reasons:
+
+* Deviance makes it explicit that we are looking at the "distance" between the observations $Y_i$ and the estimates $\widehat{\mu}_i$
+* So far, the dispersion parameter $\phi$ has been known. When $\phi$ is unknown, the residual deviance can be used to estimate $\phi$
+* For certain distributions, the residual deviance can also be used to create a goodness-of-fit test
+
+
