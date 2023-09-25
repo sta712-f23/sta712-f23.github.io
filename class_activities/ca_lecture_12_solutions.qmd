@@ -5,7 +5,93 @@ editor: source
 author: "Ciaran Evans"
 ---
 
-1.
+1. 
+
+```{r}
+n <- 100
+nsim <- 1000
+results <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, sd = 0.5)
+  y <- rpois(n, lambda = exp(x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  
+  upper <- summary(m1)$coefficients[2,1] + 
+      1.96*summary(m1)$coefficients[2,2]
+  lower <- summary(m1)$coefficients[2,1] - 
+      1.96*summary(m1)$coefficients[2,2]
+  
+  results[i] <- upper > 1 && lower < 1
+}
+
+mean(results)
+```
+
+2. 
+
+```{r}
+n <- 100
+r <- 10
+nsim <- 1000
+results <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, sd = 0.5)
+  y <- rnbinom(n, size = r, mu = exp(x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  
+  upper <- summary(m1)$coefficients[2,1] + 
+      1.96*summary(m1)$coefficients[2,2]
+  lower <- summary(m1)$coefficients[2,1] - 
+      1.96*summary(m1)$coefficients[2,2]
+  
+  results[i] <- upper > 1 && lower < 1
+}
+
+mean(results)
+```
+
+Coverage is still reasonably close to 95%.
+
+3.
+
+```{r}
+n <- 100
+nsim <- 1000
+rs <- c(0.5, 2, 5, 10, 20)
+coverage <- rep(NA, length(rs))
+
+for(j in 1:length(rs)){
+  results <- rep(NA, nsim)
+
+  for(i in 1:nsim){
+    x <- rnorm(n, sd = 0.5)
+    y <- rnbinom(n, size = rs[j], mu = exp(x))
+    
+    m1 <- glm(y ~ x, family = poisson)
+    
+    upper <- summary(m1)$coefficients[2,1] + 
+        1.96*summary(m1)$coefficients[2,2]
+    lower <- summary(m1)$coefficients[2,1] - 
+        1.96*summary(m1)$coefficients[2,2]
+    
+    results[i] <- upper > 1 && lower < 1
+  }
+  
+  coverage[j] <- mean(results)
+}
+
+
+plot(rs, coverage)
+```
+
+When the distribution is sufficiently non-Poisson (e.g., $r = 0.5$), coverage is much less than 95%. However, coverage can still be close to 95% when the distribution is close enough to a Poisson distribution, even though the Poisson assumption is wrong.
+
+
+4.
 
 ```{r, message=F, warning=F}
 library(statmod)
@@ -27,7 +113,7 @@ data.frame(x = x, resids = qresid(m1)) |>
 
 When the Poisson regression assumptions are satisfied, the quantile residual plot looks like we would expect: the residuals are mostly between -2 and 2, they are randomly scattered around 0 with no clear pattern, and the variance seems constant.
 
-2. 
+5. 
 
 ```{r, warning=F, message=F}
 n <- 1000
@@ -46,7 +132,7 @@ data.frame(x = x, resids = qresid(m2)) |>
 
 Breaking the Poisson distribution assumption, we can see that there is a lot more variability to the residuals, and the variance appears to change with x.
 
-3. 
+6. 
 
 ```{r, message=F, warning=F}
 n <- 1000
@@ -65,4 +151,4 @@ data.frame(x = x, resids = qresid(m1)) |>
 
 Breaking the shape assumption, there is a clear pattern to the quantile residual plot. The u-shape indicates that we may need to consider a quadratic function of x.
 
-4. Changes in variance indicate potential violations of the distribution assumption. Patterns indicate potential violations of the shape assumption.
+7. Changes in variance indicate potential violations of the distribution assumption. Patterns indicate potential violations of the shape assumption.

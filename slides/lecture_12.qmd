@@ -1,0 +1,65 @@
+---
+title: "Lecture 12"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## GLMs so far
+
+* Linear and logistic regression:
+  * Estimation
+  * Inference
+  * Diagnostics
+  * Prediction
+* Poisson regression:
+  * Estimation
+  * Inference
+  
+## Poisson regression model
+
+$$Y_i \sim Poisson(\lambda_i)$$
+
+$$\log(\lambda_i) = \beta^T X_i$$
+
+**Question:** What assumptions does this model make?
+
+## The importance of assumptions
+
+$$Y_i \sim Poisson(\lambda_i)$$
+
+$$\log(\lambda_i) = \beta^T X_i$$
+
+**Question:** How could we assess the *importance* of the Poisson regression assumption? I.e., what is the impact if this assumption is wrong?
+
+## Simulation plan
+
+## ADEMP: A useful framework for simulation studies
+
+-   **Aims:** Why are we doing the study?
+-   **Data generation:** How are the data simulated?
+-   **Estimand/target:** What are we estimating for each simulated dataset?
+-   **Methods:** What methods are we using for model fitting, estimation, etc?
+-   **Performance measures:** How do we measure performance of our chosen methods?
+
+## ADEMP
+
+For the Poisson simulation study:
+
+-   **Aims:**
+-   **Data generation:**
+-   **Estimand/target:**
+-   **Methods:**
+-   **Performance measures:**
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_12.html](https://sta712-f23.github.io/class_activities/ca_lecture_12.html)
+
+
+
