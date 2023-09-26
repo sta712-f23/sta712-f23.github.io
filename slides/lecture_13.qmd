@@ -1,5 +1,5 @@
 ---
-title: "Lecture 12"
+title: "Lecture 13"
 format: 
   revealjs:
     theme: theme.scss
@@ -9,12 +9,6 @@ execute:
 editor_options: 
   chunk_output_type: console
 ---
-
-## Recap: estimating $\phi$
-
-## Recap: Inference when $\phi$ is known
-
-## Inference when $\phi$ is unknown
 
 ## Data
 
@@ -43,21 +37,9 @@ $$Y_i \sim Poisson(\lambda_i)$$
 
 $$\log(\lambda_i) = \beta_0 + \beta_1 Age_i$$
 
-**Question:** What assumptions does this Poisson regression model make?
-
-## Model assumptions
-
-$Y_i =$ number of people in household other than head
-
-$$Y_i \sim Poisson(\lambda_i)$$
-
-$$\log(\lambda_i) = \beta_0 + \beta_1 Age_i$$
-
 * **Shape:** The shape of the regression model is correct 
 * **Independence:** The observations are independent
 * **Poisson distribution:** A Poisson distribution is a good choice for $Y_i$
-
-**Question:** How could I assess these assumptions?
 
 ## Shape: log empirical means plot
 
@@ -143,12 +125,8 @@ p2 <- fies %>%
 grid.arrange(p1, p2, ncol=2)
 ```
 
-## Class activity
 
-[https://sta712-f23.github.io/class_activities/ca_lecture_11.html](https://sta712-f23.github.io/class_activities/ca_lecture_11.html)
-
-
-## Class activity
+## Class activity from last time
 
 ```{r, echo=F, message=FALSE, warning=F, fig.align='center', fig.width=10, fig.height=7}
 set.seed(1)
@@ -204,3 +182,27 @@ grid.arrange(p1, p2, p3, p4, ncol=2)
 ## Using quantile residual plots
 
 We can use the quantile residual plot to assess the shape and distribution assumptions:
+
+* Changes in variance indicate potential violations of the distribution assumption
+* Patterns indicate potential violations of the shape assumption
+
+## A goodness-of-fit test
+
+## A goodness-of-fit test
+
+```{r}
+m1 <- glm(total ~ age, 
+          data = fies, family = poisson)
+
+pchisq(m1$deviance, m1$df.residual, lower.tail=F)
+
+m2 <- glm(total ~ poly(age, 2), 
+          data = fies, family = poisson)
+
+pchisq(m2$deviance, m2$df.residual, lower.tail=F)
+```
+
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_13.html](https://sta712-f23.github.io/class_activities/ca_lecture_13.html)

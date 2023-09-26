@@ -8,6 +8,7 @@ September 25
   
 September 27
 : Diagnostics
+  : [slides (html)](https://sta712-f23.github.io/slides/lecture_13.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_13.pdf), [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_13.html), [Class activity solutions](https://sta712-f23.github.io/class_activities/ca_lecture_13_solutions.html)
   
 September 29
 : MLEs with mis-specified distributions  

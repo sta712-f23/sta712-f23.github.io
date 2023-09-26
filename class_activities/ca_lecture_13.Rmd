@@ -1,0 +1,117 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Goodness-of-fit tests for Poisson data
+
+## Model assumptions and diagnostics
+
+The Poisson regression model assumes that
+
+$$Y_i \sim Poisson(\lambda_i)$$
+$$\log(\lambda_i) = \beta^T X_i$$
+As you saw in the previous class activity, violations of the model assumptions can result in problems with inference for the coefficients $\beta$. To assess whether our model is appropriate, we have discussed a variety of diagnostic tools, such as empirical log means plots, quantile residual plots, Cook's distance, and variance inflation factors.
+
+## GOF tests
+
+In addition, for certain GLMs -- including Poisson regression -- we can use a *goodness-of-fit* (GOF) test to assess whether the model is reasonable for the observed data. A GOF test evaluates the hypotheses
+
+$$H_0: \text{the model is a good fit to the data}$$
+$$H_A: \text{the model is not a good fit to the data}$$
+
+The test statistic used for appropriate GLMs is the *scaled residual deviance*. It can be shown (for more information, see 5.4.3 in Dunn and Smyth) that, if our model is correct, then
+
+$$\frac{D(Y, \widehat{\mu})}{\phi} \approx \chi^2_{n-p}$$
+
+where $p$ is the number of parameters (the $\beta$s) in the model. Under the null hypothesis, then, we can calculate a p-value for the scaled residual deviance. If the observed scaled residual deviance is very unusual, perhaps the model assumptions are not correct!
+
+## Requirements for the GOF test
+
+Using the scaled residual deviance for a GOF test requires that the saddlepoint approximation approximately holds. Recall that the EDM in dispersion model form is
+
+$$f(y; \mu, \phi) = b(y, \phi) \exp\left\lbrace -\frac{d(y, \mu)}{2\phi} \right\rbrace$$
+The saddlepoint approximation approximates $b(y, \phi)$ by $b(y, \phi) \approx 1/\sqrt{2 \pi \phi V(y)}$. Dunn and Smyth give guidelines in 5.4.4 and 7.5 for when the saddlepoint approximation (**and hence the GOF test**) is accurate.
+
+**For Poisson regression**, the scaled residual deviance $\frac{D(Y, \widehat{\mu})}{\phi} = D(Y, \widehat{\mu}) \approx \chi^2_{n-p}$ when $\min\{Y_i\} \geq 3$.
+
+
+# Questions
+
+In this class activity, you will explore the Poisson GOF test using simulated data. There are several goals for this activity:
+
+* Verify that when the saddlepoint approximation is accurate, and all assumptions are met, $\frac{D(Y, \widehat{\mu})}{\phi} \approx \chi^2_{n-p}$ 
+* Show that the test can detect violations of the Poisson regression assumptions
+* Examine how power of the GOF test changes as we change the "degree" to which the regression assumptions are violated
+
+## Verifying the $\chi^2$ distribution
+
+To begin, let's verify that when the saddlepoint approximation is accurate, and all assumptions are met, $\frac{D(Y, \widehat{\mu})}{\phi} \approx \chi^2_{n-p}$.
+
+The code below simulates $n = 100$ observations $X_i \sim N(0, 0.25)$ and $Y_i \sim Poisson(\lambda_i)$ with $\log(\lambda_i) = 4 + 0.1 X_i$ (the $\lambda_i$s should therefore be sufficiently large for the saddlepoint approximation to work). It then fits a Poisson model and calculates the residual deviance:
+
+```{r, eval=F}
+n <- 100
+x <- rnorm(n)
+lambda <- exp(4 + 0.1*x)
+y <- rpois(n, lambda)
+
+m1 <- glm(y ~ x, family = poisson)
+m1$deviance
+```
+
+:::{.question}
+#### Question 1
+
+Using a `for` loop, repeat the code many times (say, `nsim = 1000`), and store the resulting deviances. Make a QQ plot (using `qqplot`) to compare the the distribution of residual deviances to a $\chi^2_{98}$ distribution. It should be very close!
+:::
+
+:::{.question}
+#### Question 2
+
+Repeat question 1, but this time break the saddlepoint approximation. The distribution of residual deviances should no longer be close to a $\chi^2_{98}$ distribution. This demonstrates that the saddlepoint approximation is required for the GOF test, even when all the assumptions of the regression model are correct.
+:::
+
+## Detecting violations of model assumptions
+
+Next, let us see what happens when we break one of the model assumptions. This time, we will simulate $Y_i \sim NB(r, p_i)$, with $\mu_i = \mathbb{E}[Y_i]$ and
+
+$$\log(\mu_i) = 4 + 0.1 X_i$$
+The code below fits a Poisson model to the NB data with $r = 10$, and calculates a p-value for the GOF test:
+
+
+```{r, eval=F}
+n <- 100
+x <- rnorm(n)
+mu <- exp(4 + 0.1*x)
+y <- rnbinom(n, size=10, mu=mu)
+
+m1 <- glm(y ~ x, family = poisson)
+pchisq(m1$deviance, m1$df.residual, lower.tail=F)
+```
+
+The p-value is practically 0, which suggests the Poisson model may not be a good fit to the data!
+
+:::{.question}
+#### Question 3
+
+Run the code above many times, and suppose we reject the null hypothesis (that the Poisson model is a good fit) when $p < 0.05$. What fraction of the time do you reject $H_0$ (i.e., what is the power to detect the violation of the Poisson assumption)?
+:::
+
+:::{.question}
+#### Question 4
+
+Repeat question 3 for different values of $r$, and plot power vs. $r$. How does power change as the Poisson assumption becomes more reasonable?
+:::
+
+:::{.question}
+#### Question 5
+
+In the previous class activity, we also calculated coverage of 95% confidence intervals for the true slope $\beta_1$. Modify your code from the previous class activity to calculate coverage for each value of $r$ in your code from question 4. Then plot coverage against power. What do you conclude?
+:::
+
+
