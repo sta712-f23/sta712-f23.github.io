@@ -1,0 +1,138 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+1. 
+
+```{r}
+set.seed(3)
+
+n <- 1000
+
+x <- rnorm(n)
+lambda <- exp(1 + x)
+y <- rpois(n, lambda)
+
+m1 <- glm(y ~ x, family = poisson)
+
+# sandwich estimator by hand
+X <- model.matrix(m1)
+W <- diag(m1$fitted.values)
+
+J <- t(X) %*% W %*% X
+V <- t(X) %*% diag((m1$y - m1$fitted.values)^2) %*% X
+
+solve(J) %*% V %*% solve(J)
+```
+
+2.
+
+```{r}
+library(sandwich)
+
+sandwich(m1)
+```
+
+We get the same result!
+
+3. 
+
+```{r}
+nsim <- 1000
+results <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  n <- 500
+
+  x <- rnorm(n)
+  lambda <- exp(1 + x)
+  y <- rpois(n, lambda)
+  
+  m1 <- glm(y ~ x, family = poisson)
+  cov_mat <- sandwich(m1)
+  
+  upper <- m1$coefficients[2] + 1.96*sqrt(cov_mat[2,2])
+  lower <- m1$coefficients[2] - 1.96*sqrt(cov_mat[2,2])
+  
+  results[i] <- upper > 1 && lower < 1
+}
+
+mean(results)
+```
+
+We get close to 95% coverage. So, using the sandwich estimator isn't bad, even if the model assumptions are correct. (When the model assumptions are correct, the sandwich estimator is still estimating the correct variance-covariance matrix).
+
+4.
+
+```{r}
+n <- 1000000
+x <- rnorm(n, sd=0.5)
+lambda <- exp(-1 + 0.2*x^3)
+y <- rpois(n, lambda)
+m1 <- glm(y ~ x, family = poisson)
+
+beta_star_est <- m1$coefficients
+beta_star_est
+```
+
+Our estimates are $\widehat{\beta}_0^* \approx -1$, and $\widehat{\beta}_1^* \approx 0.15$. Notice that $\beta_1^* \neq 0.2$, because $\beta_1^*$ represents the coefficient on $X_i$, NOT $X_i^3$, in the best approximation to the true relationship.
+
+5.
+
+```{r}
+nsim <- 1000
+results <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  n <- 500
+
+  x <- rnorm(n, sd=0.5)
+  lambda <- exp(-1 + 0.2*x^3)
+  y <- rpois(n, lambda)
+  
+  m1 <- glm(y ~ x, family = poisson)
+  cov_mat <- sandwich(m1)
+  
+  upper <- m1$coefficients[2] + 1.96*sqrt(cov_mat[2,2])
+  lower <- m1$coefficients[2] - 1.96*sqrt(cov_mat[2,2])
+  
+  results[i] <- upper > beta_star_est[2] && lower < beta_star_est[2]
+}
+
+mean(results)
+```
+
+Using the sandwich estimator, our confidence intervals really do capture $\beta_1^*$ approximately 95% of the time!
+
+6. I will do the code for questions 6 and 7 together here:
+
+```{r}
+nsim <- 1000
+pvals_naive <- rep(NA, nsim)
+pvals_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n)
+  mu <- exp(4 + 0*x)
+  y <- rnbinom(n, size=10, mu=mu)
+  
+  m1 <- glm(y ~ x, family = poisson)
+  cov_mat <- sandwich(m1)
+  
+  pvals_naive[i] <- summary(m1)$coefficients[2,4]
+  
+  test_stat_sandwich <- m1$coefficients[2]/sqrt(cov_mat[2,2])
+  pvals_sandwich[i] <- 2*pnorm(abs(test_stat_sandwich), lower.tail=F)
+}
+
+mean(pvals_naive < 0.05)
+mean(pvals_sandwich < 0.05)
+```
+
+As we can see, the naive variance estimate (which assumes the model was correctly specified) yields a test which *completely* fails to control the type I error rate, whereas the sandwich estimate does a good job at controlling the type I error rate.
+
+
+

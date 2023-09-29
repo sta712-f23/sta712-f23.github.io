@@ -1,0 +1,36 @@
+---
+title: "Lecture 14"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Diagnostics and checking assumptions
+
+1. Empirical log means / empirical logit / scatterplots. Apply any transformations needed
+2. Fit the model
+3. (Quantile) residual plots. Apply any transformations needed
+4. VIFs and Cook's distance. Consider removing/modifying variables or observations
+5. GOF tests (if applicable)
+
+## What if assumptions are violated?
+
+* Fix any shape violations first
+* Then address distributional violations
+  - Robust variance estimates
+  - Use a different distribution/model for the response
+  
+## Recap: maximum likelihood asymptotics
+
+## Maximum likelihood with mis-specified models
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_14.html](https://sta712-f23.github.io/class_activities/ca_lecture_14.html)
+
+  

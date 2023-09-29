@@ -12,3 +12,4 @@ September 27
   
 September 29
 : MLEs with mis-specified distributions  
+  : [slides (html)](https://sta712-f23.github.io/slides/lecture_14.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_14.pdf), [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_14.html), [Class activity solutions](https://sta712-f23.github.io/class_activities/ca_lecture_14_solutions.html)
