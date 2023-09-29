@@ -1,0 +1,211 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Model mis-specification and the sandwich estimator
+
+## Background
+
+### The model
+
+Suppose we observe data $(X_1, Y_1),...,(X_n, Y_n)$ from some distribution, and we assume the the following GLM:
+
+$$Y_i \sim EDM(\mu_i, \phi)$$
+$$g(\mu_i) = \beta^T X_i$$
+
+The coefficient estimates $\widehat{\beta}$ are found by solving the score equations 
+
+$$U(\beta) = X^T(Y - \mu) = 0,$$
+usually with Fisher scoring.
+
+### Asymptotics if the model is correct
+
+*If* all our model assumptions are correct, then 
+
+$$\sqrt{n}(\widehat{\beta} - \beta) \overset{d}{\to} N(0, I^{-1}_1(\beta)),$$
+where $\beta$ is the coefficients for the *true* model, and $I_1$ is the Fisher information for a single observation. Therefore,
+
+$$\widehat{\beta} \approx N(\beta, I^{-1}(\beta)),$$
+where $I(\beta) = \dfrac{X^T W X}{\phi^2}$ and $W = \text{diag}(Var(Y_i))$.
+
+For example, for Poisson regression, 
+
+$$U(\beta) = X^T(Y - \mu_i)$$
+$$I(\beta) = X^T \text{diag}(\mu_i) X$$
+
+### Asymptotics if the model is *incorrect*
+
+For a mis-specified model, $\widehat{\beta}$ no longer estimates the coefficients of the true relationship between $X$ and $Y$. Rather, $\widehat{\beta}$ estimates the coefficients of the best *approximation* to the true relationship, in the space of models considered (e.g., the best Poisson regression approximation to the true relationship, with the specified explanatory variables).
+
+In particular:
+
+* $\widehat{\beta} \overset{p}{\to} \beta^*$, where $\beta^*$ solves $\mathbb{E}[U(\beta)] = 0$, and the expectation is with respect to the *true* distribution of the data
+* $\sqrt{n}(\widehat{\beta} - \beta^*) \overset{d}{\to} N(0, S_1(\beta^*))$, and so $\widehat{\beta} \approx N(\beta^*, S_n(\beta^*))$, where $S_n(\beta^*)$ is the *sandwich* variance matrix:
+
+$$S_n(\beta^*) = J_n^{-1}(\beta^*) V_n(\beta^*) J_n^{-1}(\beta^*)$$
+Here $J_n(\beta) = -\mathbb{E}[U'(\beta)]$ and $V_n(\beta) = Var(U(\beta))$
+
+**Note:** The usual asymptotic variance $I^{-1}(\beta)$ is just a special case of the sandwich variance! When model assumptions and regularity conditions hold, $Var(U(\beta)) = -\mathbb{E}[U'(\beta)]$, and so $J_n^{-1}(\beta^*) = V_n(\beta^*)$.
+
+### Sandwich variance estimator
+
+The estimated sandwich matrix is
+
+$$\widehat{S}_n = \widehat{J}_n^{-1} \widehat{V}_n \widehat{J}_n^{-1}$$
+where $\widehat{J}_n = \dfrac{X^T \widehat{W} X}{\phi^2}$ and $\widehat{V}_n = \sum \limits_{i=1}^n (Y_i - \widehat{\mu}_i)^2 X_i X_i^T = X^T \text{diag}((Y_i - \widehat{\mu}_i)^2) X$.
+
+For Poisson regression, for example, $\widehat{V}_n = X^T \text{diag}((Y_i - \widehat{\mu}_i)^2) X$ and $\widehat{J}_n = X^T \text{diag}(\widehat{\mu}_i) X$.
+
+## Calculating the sandwich matrix in R
+
+The following code generates data $(X_i, Y_i)$ from a Poisson model, and then fits Poisson regression to the simulated data:
+
+```{r, eval=F}
+n <- 1000
+
+x <- rnorm(n)
+lambda <- exp(1 + x)
+y <- rpois(n, lambda)
+
+m1 <- glm(y ~ x, family = poisson)
+```
+
+
+:::{.question}
+#### Question 1
+
+Use the definition of the sandwich variance estimate above to calculate $\widehat{S}_n$ for the simulated data. Recall that `m1$fitted.values` extracts the $\widehat{\mu}_i$ from the fitted model, and `model.matrix(m1)` creates the design matrix $X$.
+:::
+
+:::{.question}
+#### Question 2
+
+Fortunately, R has a nice package -- the `sandwich` package -- for calculating sandwich estimators. Install and load the sandwich package, then run the following to calculate the sandwich variance estimate:
+
+```{r, eval=F}
+sandwich(m1)
+```
+
+Verify the results agree with your hand-computed matrix from Question 1.
+
+:::
+
+
+## Verifying the sandwich matrix works
+
+To verify that the sandwich matrix works, we will first show in simulations that the sandwich matrix yields reasonable variances when the model assumptions are met. The code below simulates data from a Poisson model, and calculates a confidence interval for $\beta_1$:
+
+```{r, eval=F}
+n <- 500
+
+x <- rnorm(n)
+lambda <- exp(1 + x)
+y <- rpois(n, lambda)
+
+m1 <- glm(y ~ x, family = poisson)
+cov_mat <- sandwich(m1)
+
+upper <- m1$coefficients[2] + 1.96*sqrt(cov_mat[2,2])
+lower <- m1$coefficients[2] - 1.96*sqrt(cov_mat[2,2])
+```
+
+:::{.question}
+#### Question 3
+
+Repeat the code many times, and verify that the confidence intervals do indeed have approximately 95% coverage.
+
+:::
+
+
+## Using the sandwich matrix with mis-specified data
+
+Suppose that we observe $(X_i, Y_i)$ with $X_i \sim N(0, 0.25)$, $Y_i \sim Poisson(\mu_i)$, and 
+
+$$\log(\mu_i) = -1 + 0.2 X_i^3$$
+**However**, we incorrectly fit a Poisson model with $\log(\mu_i) = \beta_0 + \beta_1 X_i$ (i.e., our shape assumption is incorrect). As $n \to \infty$, we know that $\beta \overset{p}{\to} \beta^*$. 
+
+But what is $\beta^*$? We will have to estimate it empirically with a (very) large simulated data set.
+
+:::{.question}
+#### Question 4
+
+Use the following code to estimate $\widehat{\beta}^*$:
+
+```{r, eval=F}
+n <- 1000000
+x <- rnorm(n, sd=0.5)
+lambda <- exp(-1 + 0.2*x^3)
+y <- rpois(n, lambda)
+m1 <- glm(y ~ x, family = poisson)
+
+beta_star_est <- m1$coefficients
+beta_star_est
+```
+
+:::
+
+Now let's verify that, using the sandwich variance estimator, confidence intervals do have the desired coverage for $\beta^*$. The code below simulates data as described above, and calculates a 95% CI for $\beta_1^*$ using the sandwich variance estimate.
+
+```{r, eval=F}
+n <- 500
+
+x <- rnorm(n, sd=0.5)
+lambda <- exp(-1 + 0.2*x^3)
+y <- rpois(n, lambda)
+
+m1 <- glm(y ~ x, family = poisson)
+cov_mat <- sandwich(m1)
+
+upper <- m1$coefficients[2] + 1.96*sqrt(cov_mat[2,2])
+lower <- m1$coefficients[2] - 1.96*sqrt(cov_mat[2,2])
+```
+
+
+:::{.question}
+#### Question 5
+
+Repeat the code many times, and verify that the confidence intervals do indeed contain $\beta_1^*$ approximately 95% of the time.
+:::
+
+
+## Using the sandwich variance for hypothesis testing
+
+Suppose we assume that
+
+$$Y_i \sim Poisson(\mu_i) \hspace{1cm} \log(\mu_i) = \beta_0 + \beta_1 X_i$$
+Furthermore, we want to test $H_0: \beta_1 = 0$ vs. $H_A: \beta_1 \neq 0$.
+
+However, we have mis-specified the distribution of $Y_i$. If there really is no relationship between $X$ and $Y$, then $H_0$ would still be true (i.e., $\beta_1^* = 0$), even though the hypothesized distribution of $Y_i$ is incorrect. So, it is still reasonable to test $\beta_1 = 0$ if we want to test for a relationship between $X$ and $Y$; we just have to fix the variance estimate when constructing our test statistic.
+
+First, let's see what happens when we use the "naive" variance estimate (the one that assumes our model is correct). The code below simulates negative binomial data with an unrelated explanatory variable, and tests $H_0: \beta_1 = 0$ for a Poisson regression model (calculates the p-value):
+
+```{r}
+n <- 500
+
+x <- rnorm(n)
+mu <- exp(4 + 0*x)
+y <- rnbinom(n, size=10, mu=mu)
+
+m1 <- glm(y ~ x, family = poisson)
+
+pval_naive <- summary(m1)$coefficients[2,4]
+```
+
+
+:::{.question}
+#### Question 6
+
+Repeat the code many times. If you reject when $p < 0.05$, what is your type I error rate? Are you controlling the type I error rate at the desired level ($\alpha = 0.05$)?
+:::
+
+:::{.question}
+#### Question 7
+
+Repeat question 6, but this time calculate the test statistic and p-value using the sandwich variance estimate. What is your type I error rate now?
+:::
+
