@@ -1,0 +1,180 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Part I: Overdispersion
+
+In the first part of this class activity, we will work with data on crimes at 81 US colleges and universities. Our data includes the following variables:
+
+* `type`: college (C) or university (U)
+* `nv`: the number of crimes for that institution in the given year
+* `enroll1000`: the number of enrolled students, in thousands
+* `region`: region of the US C = Central, MW = Midwest, NE = Northeast, SE = Southeast, SW = Southwest, and W = West)
+
+We are interested in comparing the crime rates in different US regions. Our model is
+
+$$Crimes_i \sim Poisson(\lambda_i)$$
+
+$$\log(\lambda_i) = \beta_0 + \beta_1 MW_i + \beta_2 NE_i + \beta_3 SE_i + \beta_4 SW_i + \beta_5 W_i $$
+Below are the results of fitting the model with Poisson regression, and with the quasi-Poisson modification to account for overdispersion.
+
+```{r include=F}
+library(tidyverse)
+
+crimes <- read_csv("~/Documents/Teaching/sta279-s22.github.io/slides/c_data.csv")
+```
+
+```{r}
+m1 <- glm(nv ~ region, data = crimes, family = poisson)
+summary(m1)
+```
+
+<br/>
+
+<br/>
+
+```{r}
+m2 <- glm(nv ~ region, data = crimes, family = quasipoisson)
+summary(m2)
+```
+
+<br/>
+
+<br/>
+
+:::{.question}
+#### Question 1
+
+What is our estimated dispersion parameter, $\widehat{\phi}$? Do you think there is overdispersion in our data?
+:::
+
+:::{.question}
+#### Question 2
+
+Confirm that the standard errors for the quasi-Poisson fit are equal to $\sqrt{\widehat{\phi}}$ times the standard errors for the Poisson fit.
+:::
+
+:::{.question}
+#### Question 3
+
+We are interested in comparing crime rates for western and central schools. Calculate an appropriate confidence interval.
+:::
+
+
+# Part II: Comparing variance estimates for hypothesis testing
+
+So far, we have covered three different variances for the estimated coefficients $\widehat{\beta}$ in a Poisson regression model:
+
+* The basic approach assumes that the Poisson regression model is correct ($Y_i \sim Poisson(\mu_i)$, and $\mu_i = \exp\{\beta^T X_i\}$), so 
+
+$$Var(\widehat{\beta}) \approx I^{-1}(\beta)$$ 
+
+(the inverse Fisher information)
+
+* The Quasi-Poisson approach no longer assumes $Y_i \sim Poisson(\mu_i)$. Rather, we just assume that $\mathbb{E}[Y_i] = \mu_i = \exp\{\beta^T X_i\}$, and $Var(Y_i) = \phi \mu_i$. Then, 
+
+$$Var(\widehat{\beta}) \approx \phi I^{-1}(\beta)$$
+
+* The sandwich estimator approach weakens the Quasi-Poisson assumptions still further. Now we just assume that $\mathbb{E}[Y_i] = \mu_i = \exp\{\beta^T X_i\}$. Then,
+
+$$Var(\widehat{\beta}) \approx J_n^{-1}(\beta) V_n(\beta) J_n^{-1}(\beta)$$
+
+where $J_n(\beta) = -\mathbb{E}[U'(\beta)]$ and $V_n(\beta) = Var(U(\beta))$
+
+Our goal in this class activity is to compare the behavior of these different approaches. We will assume we have correctly specified the mean $\mu_i$ as a function of $X_i$, so $\widehat{\beta}$ is consistent for the true model parameters in all three approaches. However, depending on the distribution of $Y_i$, the variance estimates may or may not be good.
+
+## Hypothesis testing with Poisson data
+
+Suppose we assume that
+
+$$Y_i \sim Poisson(\mu_i) \hspace{1cm} \log(\mu_i) = \beta_0 + \beta_1 X_i$$
+
+Furthermore, we want to test $H_0: \beta_1 = 0$ vs. $H_A: \beta_1 \neq 0$.
+
+The code below estimates type I error control for the three different methods, with a sample size $n = 500$, when the Poisson assumption is **correct**:
+
+```{r, eval=F}
+library(sandwich)
+
+n <- 500
+nsim <- 1000
+
+pvals_naive <- rep(NA, nsim)
+pvals_quasi <- rep(NA, nsim)
+pvals_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean=0, sd=1)
+  y <- rpois(n, lambda = exp(2 + 0*x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  m2 <- glm(y ~ x, family = quasipoisson)
+  cov_mat <- sandwich(m1)
+  
+  pvals_naive[i] <- summary(m1)$coefficients[2,4]
+  pvals_quasi[i] <- summary(m2)$coefficients[2,4]
+  
+  test_stat_sandwich <- m1$coefficients[2]/sqrt(cov_mat[2,2])
+  pvals_sandwich[i] <- 2*pnorm(abs(test_stat_sandwich), lower.tail=F)
+}
+
+
+mean(pvals_naive < 0.05)
+mean(pvals_quasi < 0.05)
+mean(pvals_sandwich < 0.05)
+```
+
+:::{.question}
+#### Question 4
+
+Run the code, and verify that all three methods approximately control the type I error rate at $\alpha = 0.05$.
+:::
+
+:::{.question}
+#### Question 5
+
+Re-run the code, but this time use a sample size $n = 20$. What happens to type I error control for the three methods?
+:::
+
+Question 5 helps answer the question: why don't we always just use the sandwich estimator? The sandwich estimator assumes less about the variance of $Y_i$, and consequently has to estimate more. This means that the sandwich estimator isn't as accurate for small sample sizes.
+
+## Hypothesis testing with "Quasi-Poisson" data
+
+In the previous section, you saw how each of our three approaches performed when the data came from a Poisson distribution. Now let’s investigate what happens when the quasi-Poisson assumption (variance is a linear function of the mean) is satisfied.
+
+Technically, there is no "quasi-Poisson distribution", so we will need to create our own function for simulating data which (approximately) satisfies the quasi-Poisson assumption. The code below will generate this for a given dispersion parameter $\phi = 5$:
+
+```{r, eval=F}
+# Function for simulating quasi-Poisson (overdispersed Poisson) data
+rqpois <- function(n, mean, dispersion){
+  return(rnbinom(n, mu = mean, size = mean/(dispersion - 1)))
+}
+
+x <- rnorm(n, mean=0, sd=1)
+y <- rqpois(n, mean = exp(2 + 0*x), dispersion = 5)
+```
+
+
+:::{.question}
+#### Question 6
+
+Re-run the code from above, but this time use a sample size $n = 500$ and generate "quasi-Poisson" data. What happens to type I error control for the three methods?
+:::
+
+## Hypothesis testing with negative binomial data
+
+Finally, let's simulate $Y_i$ from a Negative Binomial distribution (so the Poisson distribution is violated, and the Quasi-Poisson distribution is also violated because variance is no longer a linear function of the mean).
+
+:::{.question}
+#### Question 7
+
+Re-run the code from above, but this time use a sample size $n = 500$ and generate negative binomial data. What happens to type I error control for the three methods?
+:::
+
+
+

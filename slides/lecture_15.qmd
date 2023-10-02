@@ -1,0 +1,90 @@
+---
+title: "Lecture 15"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Motivating example: air pollution data
+
+* Data on Chicago air quality and death between 1987 and 2000
+* Variables include:
+  - deaths
+  - ozone concentration
+  - sulphur dioxide concentration
+  - temperature
+
+## Motivating example: air pollution data
+
+$$Deaths_i \sim Poisson(\lambda_i)$$
+$$\log(\lambda_i) = \beta_0 + \beta_1 Ozone_i$$
+
+## Quantile residual plot
+
+```{r, include=F}
+library(statmod)
+library(gamair)
+library(tidyverse)
+
+data("chicago")
+
+m1 <- glm(death ~ o3median, data = chicago, family = poisson)
+```
+
+```{r, echo=F, message=F, warning=F}
+chicago |>
+  drop_na(death, o3median) |>
+  ggplot(aes(x = o3median, y = qresid(m1))) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() + 
+  labs(x = "Ozone", y = "Quantile residuals")
+```
+
+## GOF test
+
+```{r}
+m1$deviance
+
+m1$df.residual
+
+pchisq(m1$deviance, m1$df.residual, lower.tail=F)
+```
+
+## Overdisperion
+
+**Overdispersion** occurs when the response variable $Y_i$ has greater variability than the model accounts for
+
+## Recap: sandwich estimator for GLMs
+
+## Assumptions about both mean and variance
+
+## Quasi-Poisson models
+
+## Example: Chicago air quality
+
+Poisson model:
+
+```{r, echo=F}
+m1 <- glm(death ~ o3median, data = chicago, family = poisson)
+summary(m1)$coefficients
+```
+
+Quasi-Poisson model:
+
+```{r, echo=F}
+m2 <- glm(death ~ o3median, data = chicago, family = quasipoisson)
+summary(m2)
+```
+
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_15.html](https://sta712-f23.github.io/class_activities/ca_lecture_15.html)
+
+  
