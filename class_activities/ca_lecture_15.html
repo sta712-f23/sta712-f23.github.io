@@ -1656,6 +1656,10 @@ margin-left: 0 !important;
           testing with “Quasi-Poisson” data</a></li>
           <li><a href="#hypothesis-testing-with-negative-binomial-data" id="toc-hypothesis-testing-with-negative-binomial-data">Hypothesis
           testing with negative binomial data</a></li>
+          <li><a href="#confidence-intervals-with-negative-binomial-data" id="toc-confidence-intervals-with-negative-binomial-data">Confidence
+          intervals with negative binomial data</a></li>
+          <li><a href="#key-take-aways" id="toc-key-take-aways">Key
+          take-aways</a></li>
           </ul></li>
           </ul>
         </nav>
@@ -1891,15 +1895,84 @@ data. What happens to type I error control for the three methods?</p>
 </div>
 <div id="hypothesis-testing-with-negative-binomial-data" class="section level2">
 <h2>Hypothesis testing with negative binomial data</h2>
-<p>Finally, let’s simulate <span class="math inline">\(Y_i\)</span> from
-a Negative Binomial distribution (so the Poisson distribution is
-violated, and the Quasi-Poisson distribution is also violated because
-variance is no longer a linear function of the mean).</p>
+<p>Next, let’s simulate <span class="math inline">\(Y_i\)</span> from a
+Negative Binomial distribution (so the Poisson distribution is violated,
+and the Quasi-Poisson distribution is also violated because variance is
+no longer a linear function of the mean).</p>
 <div id="question-7" class="section level4 question">
 <h4>Question 7</h4>
 <p>Re-run the code from above, but this time use a sample size <span class="math inline">\(n = 500\)</span> and generate negative binomial
 data. What happens to type I error control for the three methods?</p>
 </div>
+<p><strong>Important:</strong> the type I error for the quasi-Poisson
+method is still good! Why? Because, if <span class="math inline">\(H_0\)</span> is true for this simple model, then
+<span class="math inline">\(Var(Y_i)\)</span> does not depend on <span class="math inline">\(X_i\)</span>. So, we don’t really need to capture
+the mean-variance relationship correctly.</p>
+</div>
+<div id="confidence-intervals-with-negative-binomial-data" class="section level2">
+<h2>Confidence intervals with negative binomial data</h2>
+<p>To see when the quasi-Poisson method fails, suppose we have data</p>
+<p><span class="math display">\[Y_i \sim NB(r=0.5, p_i)\]</span></p>
+<p><span class="math display">\[\log(\mu_i) = 1 + X_i\]</span> where
+<span class="math inline">\(X_i \sim N(0, 1)\)</span>. We want to
+calculate a 95% confidence interval for <span class="math inline">\(\beta_1\)</span> (here <span class="math inline">\(\beta_1 = 1\)</span>).</p>
+<p>The following code estimates coverage of 95% confidence intervals for
+the three methods:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>nsim <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>covers_naive <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, nsim)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>covers_quasi <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, nsim)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>covers_sandwich <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, nsim)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nsim){</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span><span class="dv">1</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">rnbinom</span>(n, <span class="at">size =</span> <span class="fl">0.5</span>, <span class="at">mu =</span> <span class="fu">exp</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span><span class="sc">*</span>x))</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  </span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  m1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> poisson)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  m2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> x, <span class="at">family =</span> quasipoisson)</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  cov_mat <span class="ot">&lt;-</span> <span class="fu">sandwich</span>(m1)</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  </span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  upper_naive <span class="ot">&lt;-</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">summary</span>(m1)<span class="sc">$</span>coefficients[<span class="dv">2</span>, <span class="dv">2</span>]</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  lower_naive <span class="ot">&lt;-</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">summary</span>(m1)<span class="sc">$</span>coefficients[<span class="dv">2</span>, <span class="dv">2</span>]</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  covers_naive[i] <span class="ot">&lt;-</span> upper_naive <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">&amp;&amp;</span> lower_naive <span class="sc">&lt;</span> <span class="dv">1</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  </span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  upper_quasi <span class="ot">&lt;-</span> m2<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">+</span> <span class="fu">qt</span>(<span class="fl">0.975</span>, n<span class="dv">-2</span>)<span class="sc">*</span><span class="fu">summary</span>(m2)<span class="sc">$</span>coefficients[<span class="dv">2</span>, <span class="dv">2</span>]</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  lower_quasi <span class="ot">&lt;-</span> m2<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">-</span> <span class="fu">qt</span>(<span class="fl">0.975</span>, n<span class="dv">-2</span>)<span class="sc">*</span><span class="fu">summary</span>(m2)<span class="sc">$</span>coefficients[<span class="dv">2</span>, <span class="dv">2</span>]</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  covers_quasi[i] <span class="ot">&lt;-</span> upper_quasi <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">&amp;&amp;</span> lower_quasi <span class="sc">&lt;</span> <span class="dv">1</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  </span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>  upper_sandwich <span class="ot">&lt;-</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sqrt</span>(cov_mat[<span class="dv">2</span>,<span class="dv">2</span>])</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>  lower_sandwich <span class="ot">&lt;-</span> m1<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sqrt</span>(cov_mat[<span class="dv">2</span>,<span class="dv">2</span>])</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>  covers_sandwich[i] <span class="ot">&lt;-</span> upper_sandwich <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">&amp;&amp;</span> lower_sandwich <span class="sc">&lt;</span> <span class="dv">1</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>}</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="fu">mean</span>(covers_naive)</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="fu">mean</span>(covers_quasi)</span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="fu">mean</span>(covers_sandwich)</span></code></pre></div>
+<div id="question-8" class="section level4 question">
+<h4>Question 8</h4>
+<p>Run the code above. How does coverage perform for the different
+methods?</p>
+</div>
+</div>
+<div id="key-take-aways" class="section level2">
+<h2>Key take-aways</h2>
+<ul>
+<li>When data is Poisson, all three methods work (they all estimate the
+correct variance)</li>
+<li>However, the sandwich estimator needs larger sample sizes</li>
+<li>When data is not Poisson, the basic Poisson regression approach
+(variance = inverse Fisher information for Poisson) fails (poor control
+of type I error, poor coverage of confidence intervals)</li>
+<li>If <span class="math inline">\(Var(Y_i) = \phi \mu_i\)</span> (a
+linear relationship between mean and variance), then both the
+quasi-Poisson and sandwich estimators work</li>
+<li>If there is really <em>not</em> a linear relationship between mean
+and variance (e.g., NB data with a quadratic relationship between mean
+and variance), then the quasi-Poisson approach will do better than the
+basic Poisson approach, but worse than the sandwich estimator</li>
+</ul>
 </div>
 </div>
 

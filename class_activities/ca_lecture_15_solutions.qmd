@@ -1,0 +1,201 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+1. $\widehat{\phi} = 9.27$. Seems likely that there is overdispersion.
+
+2. E.g.: $0.567 = 0.1861 \sqrt{9.27}$
+
+3. $0.5306 \pm t^*_{n-p} \ 0.5665$, where $t^*_{n-p}$ is the 0.975 quantile of a $t_{n-2}$ distribution (we will talk more next class about why it is a $t$ distribution). Here:
+
+```{r}
+0.5306 + qt(0.975, 75) * 0.5665
+0.5306 - qt(0.975, 75) * 0.5665
+```
+
+
+4.
+
+```{r}
+library(sandwich)
+set.seed(3)
+
+n <- 500
+nsim <- 1000
+
+pvals_naive <- rep(NA, nsim)
+pvals_quasi <- rep(NA, nsim)
+pvals_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean=0, sd=1)
+  y <- rpois(n, lambda = exp(2 + 0*x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  m2 <- glm(y ~ x, family = quasipoisson)
+  cov_mat <- sandwich(m1)
+  
+  pvals_naive[i] <- summary(m1)$coefficients[2,4]
+  pvals_quasi[i] <- summary(m2)$coefficients[2,4]
+  
+  test_stat_sandwich <- m1$coefficients[2]/sqrt(cov_mat[2,2])
+  pvals_sandwich[i] <- 2*pnorm(abs(test_stat_sandwich), lower.tail=F)
+}
+
+
+mean(pvals_naive < 0.05)
+mean(pvals_quasi < 0.05)
+mean(pvals_sandwich < 0.05)
+```
+
+All methods do indeed have a type I error rate of around 0.05, when rejecting at level 0.05.
+
+5.
+
+```{r}
+n <- 20
+nsim <- 1000
+
+pvals_naive <- rep(NA, nsim)
+pvals_quasi <- rep(NA, nsim)
+pvals_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean=0, sd=1)
+  y <- rpois(n, lambda = exp(2 + 0*x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  m2 <- glm(y ~ x, family = quasipoisson)
+  cov_mat <- sandwich(m1)
+  
+  pvals_naive[i] <- summary(m1)$coefficients[2,4]
+  pvals_quasi[i] <- summary(m2)$coefficients[2,4]
+  
+  test_stat_sandwich <- m1$coefficients[2]/sqrt(cov_mat[2,2])
+  pvals_sandwich[i] <- 2*pnorm(abs(test_stat_sandwich), lower.tail=F)
+}
+
+
+mean(pvals_naive < 0.05)
+mean(pvals_quasi < 0.05)
+mean(pvals_sandwich < 0.05)
+```
+
+The basic Poisson regression approach and the quasi-Poisson approach both control the type I error rate, but the sandwich approach now has an inflated type I error. This is because the sandwich estimator makes fewer assumptions about the variance, and so it takes more data to get a good estimate of the variance. (Of course, if the Poisson assumptions were not satisfied, then the Poisson model would not have a good estimate of the variance either!)
+
+6.
+
+```{r}
+n <- 500
+nsim <- 1000
+
+rqpois <- function(n, mean, dispersion){
+  return(rnbinom(n, mu = mean, size = mean/(dispersion - 1)))
+}
+
+pvals_naive <- rep(NA, nsim)
+pvals_quasi <- rep(NA, nsim)
+pvals_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean=0, sd=1)
+  y <- rqpois(n, mean = exp(2 + 0*x), dispersion = 5)
+  
+  m1 <- glm(y ~ x, family = poisson)
+  m2 <- glm(y ~ x, family = quasipoisson)
+  cov_mat <- sandwich(m1)
+  
+  pvals_naive[i] <- summary(m1)$coefficients[2,4]
+  pvals_quasi[i] <- summary(m2)$coefficients[2,4]
+  
+  test_stat_sandwich <- m1$coefficients[2]/sqrt(cov_mat[2,2])
+  pvals_sandwich[i] <- 2*pnorm(abs(test_stat_sandwich), lower.tail=F)
+}
+
+
+mean(pvals_naive < 0.05)
+mean(pvals_quasi < 0.05)
+mean(pvals_sandwich < 0.05)
+```
+
+The basic Poisson approach completely fails to control type I error, but the quasi-Poisson and sandwich approaches do control the type I error.
+
+
+7.
+
+
+```{r}
+n <- 500
+nsim <- 1000
+
+pvals_naive <- rep(NA, nsim)
+pvals_quasi <- rep(NA, nsim)
+pvals_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean=0, sd=1)
+  y <- rnbinom(n, size = 0.5, mu = exp(2 + 0*x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  m2 <- glm(y ~ x, family = quasipoisson)
+  cov_mat <- sandwich(m1)
+  
+  pvals_naive[i] <- summary(m1)$coefficients[2,4]
+  pvals_quasi[i] <- summary(m2)$coefficients[2,4]
+  
+  test_stat_sandwich <- m1$coefficients[2]/sqrt(cov_mat[2,2])
+  pvals_sandwich[i] <- 2*pnorm(abs(test_stat_sandwich), lower.tail=F)
+}
+
+
+mean(pvals_naive < 0.05)
+mean(pvals_quasi < 0.05)
+mean(pvals_sandwich < 0.05)
+```
+
+Both the quasi-Poisson and sandwich approaches approximately control type I error.
+
+8.
+
+```{r}
+n <- 500
+nsim <- 1000
+
+covers_naive <- rep(NA, nsim)
+covers_quasi <- rep(NA, nsim)
+covers_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean=0, sd=1)
+  y <- rnbinom(n, size = 0.5, mu = exp(1 + 1*x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  m2 <- glm(y ~ x, family = quasipoisson)
+  cov_mat <- sandwich(m1)
+  
+  upper_naive <- m1$coefficients[2] + 1.96 * summary(m1)$coefficients[2, 2]
+  lower_naive <- m1$coefficients[2] - 1.96 * summary(m1)$coefficients[2, 2]
+  covers_naive[i] <- upper_naive > 1 && lower_naive < 1
+  
+  upper_quasi <- m2$coefficients[2] + qt(0.975, n-2)*summary(m2)$coefficients[2, 2]
+  lower_quasi <- m2$coefficients[2] - qt(0.975, n-2)*summary(m2)$coefficients[2, 2]
+  covers_quasi[i] <- upper_quasi > 1 && lower_quasi < 1
+  
+  upper_sandwich <- m1$coefficients[2] + 1.96 * sqrt(cov_mat[2,2])
+  lower_sandwich <- m1$coefficients[2] - 1.96 * sqrt(cov_mat[2,2])
+  covers_sandwich[i] <- upper_sandwich > 1 && lower_sandwich < 1
+}
+
+
+mean(covers_naive)
+mean(covers_quasi)
+mean(covers_sandwich)
+```
+
+The quasi-Poisson method does better than the basic Poisson approach, but worse than the sandwich approach.
+
+
+

@@ -168,7 +168,7 @@ Re-run the code from above, but this time use a sample size $n = 500$ and genera
 
 ## Hypothesis testing with negative binomial data
 
-Finally, let's simulate $Y_i$ from a Negative Binomial distribution (so the Poisson distribution is violated, and the Quasi-Poisson distribution is also violated because variance is no longer a linear function of the mean).
+Next, let's simulate $Y_i$ from a Negative Binomial distribution (so the Poisson distribution is violated, and the Quasi-Poisson distribution is also violated because variance is no longer a linear function of the mean).
 
 :::{.question}
 #### Question 7
@@ -176,5 +176,67 @@ Finally, let's simulate $Y_i$ from a Negative Binomial distribution (so the Pois
 Re-run the code from above, but this time use a sample size $n = 500$ and generate negative binomial data. What happens to type I error control for the three methods?
 :::
 
+**Important:** the type I error for the quasi-Poisson method is still good! Why? Because, if $H_0$ is true for this simple model, then $Var(Y_i)$ does not depend on $X_i$. So, we don't really need to capture the mean-variance relationship correctly.
+
+## Confidence intervals with negative binomial data
+
+To see when the quasi-Poisson method fails, suppose we have data
+
+$$Y_i \sim NB(r=0.5, p_i)$$
+
+$$\log(\mu_i) = 1 + X_i$$
+where $X_i \sim N(0, 1)$. We want to calculate a 95% confidence interval for $\beta_1$ (here $\beta_1 = 1$).
+
+The following code estimates coverage of 95% confidence intervals for the three methods:
+
+```{r, eval=F}
+n <- 500
+nsim <- 1000
+
+covers_naive <- rep(NA, nsim)
+covers_quasi <- rep(NA, nsim)
+covers_sandwich <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean=0, sd=1)
+  y <- rnbinom(n, size = 0.5, mu = exp(1 + 1*x))
+  
+  m1 <- glm(y ~ x, family = poisson)
+  m2 <- glm(y ~ x, family = quasipoisson)
+  cov_mat <- sandwich(m1)
+  
+  upper_naive <- m1$coefficients[2] + 1.96 * summary(m1)$coefficients[2, 2]
+  lower_naive <- m1$coefficients[2] - 1.96 * summary(m1)$coefficients[2, 2]
+  covers_naive[i] <- upper_naive > 1 && lower_naive < 1
+  
+  upper_quasi <- m2$coefficients[2] + qt(0.975, n-2)*summary(m2)$coefficients[2, 2]
+  lower_quasi <- m2$coefficients[2] - qt(0.975, n-2)*summary(m2)$coefficients[2, 2]
+  covers_quasi[i] <- upper_quasi > 1 && lower_quasi < 1
+  
+  upper_sandwich <- m1$coefficients[2] + 1.96 * sqrt(cov_mat[2,2])
+  lower_sandwich <- m1$coefficients[2] - 1.96 * sqrt(cov_mat[2,2])
+  covers_sandwich[i] <- upper_sandwich > 1 && lower_sandwich < 1
+}
+
+
+mean(covers_naive)
+mean(covers_quasi)
+mean(covers_sandwich)
+```
+
+:::{.question}
+#### Question 8
+
+Run the code above. How does coverage perform for the different methods?
+:::
+
+
+## Key take-aways
+
+* When data is Poisson, all three methods work (they all estimate the correct variance)
+* However, the sandwich estimator needs larger sample sizes
+* When data is not Poisson, the basic Poisson regression approach (variance = inverse Fisher information for Poisson) fails (poor control of type I error, poor coverage of confidence intervals)
+* If $Var(Y_i) = \phi \mu_i$ (a linear relationship between mean and variance), then both the quasi-Poisson and sandwich estimators work
+* If there is really *not* a linear relationship between mean and variance (e.g., NB data with a quadratic relationship between mean and variance), then the quasi-Poisson approach will do better than the basic Poisson approach, but worse than the sandwich estimator
 
 
