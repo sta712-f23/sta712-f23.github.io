@@ -1,0 +1,37 @@
+---
+title: "Lecture 16"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Recap: quasi-likelihood methods
+
+## Recap: quasi-Poisson
+
+## When to use quasi-Poisson models
+
+* The response is a count variable
+* The Poisson shape assumption looks good
+* The response has more variability than a Poisson distribution accounts for
+* We believe variance is a multiple of the mean
+
+## Estimating the dispersion parameter
+
+## Mean deviance estimate
+
+## Pearson estimate
+
+## Distribution of the estimates
+
+## Inference with quasi-Poisson models
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_16.html](https://sta712-f23.github.io/class_activities/ca_lecture_16.html)
+

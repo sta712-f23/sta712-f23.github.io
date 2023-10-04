@@ -1,0 +1,110 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+1. 
+
+```{r}
+set.seed(11)
+
+rqpois <- function(n, mean, dispersion){
+  return(rnbinom(n, mu = mean, size = mean/(dispersion - 1)))
+}
+
+n <- 200
+nsim <- 1000
+
+pearson_ests <- rep(NA, nsim)
+mean_dev_ests <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n)
+  y <- rqpois(n, mean = exp(3 + 0.1*x), dispersion = 5)
+  
+  m1 <- glm(y ~ x, family = poisson)
+  pearson_resids <- residuals(m1, type = "pearson")
+  pearson_ests[i] <- sum(pearson_resids^2)/m1$df.residual
+  mean_dev_ests[i] <- m1$deviance/m1$df.residual
+}
+
+mean(pearson_ests)
+mean(mean_dev_ests)
+
+
+sd(pearson_ests)
+sd(mean_dev_ests)
+```
+
+$\mathbb{E}[\widehat{\phi}] \approx 5$ for both estimates. The mean of the Pearson estimate is a little closer to the true dispersion parameter. The mean deviance estimate is slightly less variable.
+
+2.
+
+```{r}
+qqplot(pearson_ests*m1$df.residual/5, rchisq(nsim, m1$df.residual),
+       main = "Pearson estimate", 
+       xlab = "Quantiles of Pearson estimates",
+       ylab = "Quantiles of chi-square distribution")
+abline(a=0, b=1)
+```
+
+```{r}
+qqplot(mean_dev_ests*m1$df.residual/5, rchisq(nsim, m1$df.residual),
+       main = "Mean deviance estimate", 
+       xlab = "Quantiles of mean deviance estimates",
+       ylab = "Quantiles of chi-square distribution")
+abline(a=0, b=1)
+```
+
+The $\chi^2_{n-p}$ approximation is pretty good for both estimates. Maybe slightly better for the Pearson estimate.
+
+3.
+
+```{r}
+n <- 200
+nsim <- 1000
+
+pearson_ests <- rep(NA, nsim)
+mean_dev_ests <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n)
+  y <- rqpois(n, mean = exp(0 + 0.1*x), dispersion = 5)
+  
+  m1 <- glm(y ~ x, family = poisson)
+  pearson_resids <- residuals(m1, type = "pearson")
+  pearson_ests[i] <- sum(pearson_resids^2)/m1$df.residual
+  mean_dev_ests[i] <- m1$deviance/m1$df.residual
+}
+
+mean(pearson_ests)
+mean(mean_dev_ests)
+
+
+sd(pearson_ests)
+sd(mean_dev_ests)
+```
+
+The Pearson estimate is still close to $\phi$ in expectation, but the mean deviance estimate is quite biased. The mean deviance estimate is less variable than the Pearson estimate.
+
+4. 
+
+```{r}
+qqplot(pearson_ests*m1$df.residual/5, rchisq(nsim, m1$df.residual),
+       main = "Pearson estimate", 
+       xlab = "Quantiles of Pearson estimates",
+       ylab = "Quantiles of chi-square distribution")
+abline(a=0, b=1)
+```
+
+```{r}
+qqplot(mean_dev_ests*m1$df.residual/5, rchisq(nsim, m1$df.residual),
+       main = "Mean deviance estimate", 
+       xlab = "Quantiles of mean deviance estimates",
+       ylab = "Quantiles of chi-square distribution")
+abline(a=0, b=1)
+```
+
+The $\chi^2_{n-p}$ approximation fails for both estimates. So, the Pearson estimate still does a good job estimating $\phi$, but it no longer has a $\chi^2_{n-p}$ distribution.

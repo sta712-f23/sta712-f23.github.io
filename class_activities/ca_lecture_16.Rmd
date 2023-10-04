@@ -1,0 +1,102 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Estimating the dispersion parameter
+
+We have talked about two different estimates of the dispersion parameter:
+
+* The **Pearson** estimate $\widehat{\phi}_P = \frac{1}{n-p} \sum \limits_{i=1}^n \left( \dfrac{Y_i - \widehat{\mu}_i}{\sqrt{V(\widehat{\mu}_i)}} \right)^2$
+
+* The **mean deviance** estimate $\widehat{\phi}_D = \dfrac{D(Y, \widehat{\mu})}{n-p}$
+
+## Which estimate is better?
+
+If the saddlepoint approximation holds, then the mean deviance estimator performs well. For Poisson data, for example, this requires sufficiently large counts for $Y_i$ (Dunn and Smyth give the rule of thumb that $\min\{Y_i\} \geq 3$). When the saddlepoint approximation does not hold, however, the mean deviance estimate is biased.
+
+In contrast, the Pearson estimate only requires that the mean and variance be correctly specified to get a good estimate of $\phi$. Provided the mean and variance are correct, the Pearson estimate will be approximately unbiased. However, for the distribution of $\frac{(n-p)}{\phi}\widehat{\phi}_P$ to be approximately $\chi^2_{n-p}$, we do need sufficiently large values for $Y_i$. For Poisson data, Dunn and Smyth give the rule of thumb that $\min\{Y_i\} \geq 5$.
+
+The Pearson estimate is often used in practice, because it is more robust than the mean deviance estimator. The Pearson estimator is what R uses by default when fitting a quasi-Poisson model. 
+
+## Comparing estimators
+
+In this class activity, you will use simulations to compare the behavior of $\widehat{\phi}_P$ and $\widehat{\phi}_D$.
+
+To begin, let's simulate data from a "quasi-Poisson" distribution, as in a previous activity, and calculate the two dispersion estimates (the true dispersion in the simulated data below is $\phi = 5$):
+
+```{r}
+rqpois <- function(n, mean, dispersion){
+  return(rnbinom(n, mu = mean, size = mean/(dispersion - 1)))
+}
+
+n <- 200
+x <- rnorm(n)
+y <- rqpois(n, mean = exp(3 + 0.1*x), dispersion = 5)
+
+m1 <- glm(y ~ x, family = poisson)
+pearson_resids <- residuals(m1, type = "pearson")
+pearson_est <- sum(pearson_resids^2)/m1$df.residual
+mean_dev_est <- m1$deviance/m1$df.residual
+
+pearson_est
+mean_dev_est
+```
+
+Both get the estimated dispersion roughly correct. Let's see what the distributions of $\widehat{\phi}_P$ and $\widehat{\phi}_D$ look like.
+
+
+:::{.question}
+#### Question 1
+
+Repeat the code above many times, and verify that $\mathbb{E}[\widehat{\phi}_P] \approx \phi$ and $\mathbb{E}[\widehat{\phi}_D] \approx \phi$. Which estimate is more variable?
+:::
+
+:::{.question}
+#### Question 2
+
+Use QQ plots to compare the distribution of $\frac{(n-p)}{\phi}\widehat{\phi}$ to a $\chi^2_{n-p}$ for both estimates.
+:::
+
+## Breaking assumptions
+
+As discussed above, the mean deviance estimate relies on the saddlepoint approximation. The Pearson estimate also relies on sufficiently large $Y_i$ for the $\chi^2$ distribution to be reasonable. 
+
+The code below simulates data for which the counts $Y_i$ are *not* sufficiently large for these approximations to hold:
+
+```{r}
+n <- 200
+x <- rnorm(n)
+y <- rqpois(n, mean = exp(0 + 0.1*x), dispersion = 5)
+
+m1 <- glm(y ~ x, family = poisson)
+pearson_resids <- residuals(m1, type = "pearson")
+pearson_est <- sum(pearson_resids^2)/m1$df.residual
+mean_dev_est <- m1$deviance/m1$df.residual
+
+pearson_est
+mean_dev_est
+```
+
+:::{.question}
+#### Question 3
+
+Repeat the code above many times, and verify that we still have $\mathbb{E}[\widehat{\phi}_P] \approx \phi$, but now $\widehat{\phi}_D$ is quite biased. 
+:::
+
+:::{.question}
+#### Question 4
+
+Use QQ plots to compare the distribution of $\frac{(n-p)}{\phi}\widehat{\phi}$ to a $\chi^2_{n-p}$ for both estimates.
+:::
+
+## Key take-aways
+
+* $\widehat{\phi}_P$ is slightly more variable than $\widehat{\phi}_D$
+* However, $\widehat{\phi}_P$ is approximately unbiased even when the counts $Y_i$ are small
+* The $\chi^2_{n-p}$ distribution is not appropriate for either estimate when the counts $Y_i$ are too small
+

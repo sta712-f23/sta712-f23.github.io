@@ -10,6 +10,7 @@ October 2
   
 October 4
 : Estimating the dispersion parameter
+  : [slides (html)](https://sta712-f23.github.io/slides/lecture_16.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_16.pdf), [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_16.html), [Class activity solutions](https://sta712-f23.github.io/class_activities/ca_lecture_16_solutions.html)
   
 : Dunn and Smyth 6.8, 7.6
   
