@@ -1,0 +1,158 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Poisson hurdle models
+
+The purpose of this class activity is to guide you through the basics of Poisson hurdle models. In this class activity, you will work with data on the US National Medical Expenditure Survey (NMES) from 1988. The data is available in the `AER` package. The following code loads it into R and selects a subset of columns for us to focus on:
+
+```{r, message=F, warning=F}
+library(AER)
+library(tidyverse)
+
+data("NMES1988")
+nmes <- NMES1988 |>
+  select(visits, hospital, health, chronic, gender, school, insurance)
+```
+
+**Goal:** Model the number of visits using the other variables in the data (number of hospital stays, health status, number of years of education, etc.)
+
+As we can see, there are a lot of 0s in this data:
+
+```{r}
+nmes |>
+  ggplot(aes(x = visits)) +
+  geom_histogram(bins = 40) +
+  theme_bw()
+
+nrow(nmes)
+sum(nmes$visits == 0)
+```
+
+
+## Initial attempt: Poisson regression
+
+:::{.question}
+#### Question 1
+
+Fit a Poisson regression model to predict the number of visits, the other variables in the `nmes` data (above) as explanatory variables.
+:::
+
+From EDA above, we suspect that there may be excess 0s in this data. To see if our model is under-estimating the number of 0s, we can compare the observed number of 0s to the predicted number of 0s.
+
+:::{.question}
+#### Question 2
+
+How many 0s does our fitted Poisson model predict? How does this compare to the observed number of 0s? Recall that if $Y_i \sim Poisson(\lambda_i)$, then $P(Y_i = 0) = \exp\{-\lambda_i\}$, and the estimated means $\widehat{\lambda}_i$ can be extracted from a fitted model with `m1$fitted.values`.
+:::
+
+
+Clearly, our Poisson model under-estimates the number of 0s. Does a negative binomial model fix the issue?
+
+:::{.question}
+#### Question 3
+
+Fit a negative binomial model, and calculate the estimated number of 0s. How does it compare to the observed number of 0s? (The `dnbinom` function will be useful here)
+:::
+
+## A Poisson hurdle model
+
+The negative binomial model helps (by increasing the allowed variability of $Y_i$), but we still slightly underestimate the number of 0s. What can we do instead?
+
+A *hurdle model* explicitly models the 0s. For example, a Poisson hurdle model looks like this:
+
+$$P(Y_i > 0) = p_i \hspace{1cm} \log \left( \frac{p_i}{1 - p_i} \right) = \gamma^T X_i$$
+$$Y_i|(Y_i > 0) \sim PosPoisson(\lambda_i) \hspace{1cm} \log(\lambda_i) = \beta^T X_i$$
+There are two components to this model: 
+
+* The first component models whether or not $Y_i = 0$ (using logistic regression). The coefficients $\gamma$ correspond to the first component.
+* If $Y_i > 0$, then the second component models the distribution of $Y_i$ with a positive Poisson (aka zero-truncated Poisson) distribution. Recall that $Y \sim PosPoisson(\lambda)$ if $P(Y = y) = \dfrac{\lambda \exp\{-\lambda\}}{y!(1 - \exp\{-\lambda\})}$ for $y = 1, 2, 3, ...$
+
+The Poisson hurdle model can be fit using Fisher scoring. It can be shown (perhaps you will do this on a homework assignment) that the Fisher information for $\gamma$ and $\beta$ is
+
+$$I(\beta, \gamma) = \begin{bmatrix}
+X^T W_\beta X & 0 \\
+0 & X^T W_\gamma X
+\end{bmatrix}$$
+
+where $W_\gamma = \text{diag}(p_i(1 - p_i))$ and 
+
+$$W_\beta = \text{diag} \left( \frac{\lambda_i e^{\lambda_i} (- \lambda_i + e^{\lambda_i} - 1)}{(e^{\lambda_i} - 1)^2} p_i \right)$$
+
+## Fitting the model in R
+
+To fit the hurdle model in R, we will use the `hurdle` function in the `pscl` package:
+
+```{r, message=F, warning=F}
+library(pscl)
+
+m3 <- hurdle(visits ~ ., dist = "poisson", zero.dist = "binomial",
+             data = nmes)
+```
+
+Some comments on the syntax:
+
+* Recall the `~ .` means "include all the other variables as the explanatory variables"
+* `dist` specifies the count model (so if we use `dist = "poisson"', we will get a truncated *Poisson* distribution for $Y_i > 0$)
+* `zero.dist` specifies the distribution for the component which models whether $Y_i = 0$ (so using `zero.dist = "binomial"` means we are using a logistic regression model for this component)
+
+Now let's look at the fitted coefficients:
+
+```{r}
+summary(m3)
+```
+
+You can see that we get coefficients for the positive Poisson component (`Count model coefficients (truncated poisson with log link)`) and the logistic component (`Zero hurdle model coefficients (binomial with logit link)`).
+
+:::{.question}
+#### Question 4
+
+Looking at the fitted coefficients, are individuals with greater levels of education more or less likely to visit a physician at least once (holding other variables fixed)?
+:::
+
+:::{.question}
+#### Question 5
+
+*For individual who visited a physician at least once*, do individuals with poor health tend to have more or fewer physician visits (holding other variables fixed)?
+:::
+
+## Variance-covariance matrix
+
+The estimated variance-covariance matrix for the Poisson hurdle model can be extracted with `vcov`. If we want the full matrix:
+
+```{r, eval=F}
+vcov(m3)
+```
+
+If we want the matrix just for the count component:
+
+```{r}
+vcov(m3, "count")
+```
+
+If we want the matrix just for the zero component:
+
+```{r}
+vcov(m3, "zero")
+```
+
+
+
+:::{.question}
+#### Question 6
+
+Verify that the estimated variance-covariance matrix from the `pscl` package agrees with the inverse Fisher information $I^{-1}(\beta, \gamma)$, with $I(\beta, \gamma)$ defined above. (The numbers should be close when you compute it yourself, though they might not be exactly identical).
+
+* $\widehat{\lambda}_i$ is given by `predict(m3, "count")`
+* $\widehat{p}_i$ is given by `predict(m3, "prob")[,1]`
+:::
+
+## Next steps
+
+Now that you have seen how to fit a Poisson hurdle model, our next steps will be to discuss inference and diagnostics with hurdle models.
+
