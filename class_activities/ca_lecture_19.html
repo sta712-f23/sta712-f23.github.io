@@ -1901,15 +1901,15 @@ not be exactly identical).</p>
 <li><span class="math inline">\(\widehat{\lambda}_i\)</span> is given by
 <code>predict(m3, &quot;count&quot;)</code></li>
 <li><span class="math inline">\(\widehat{p}_i\)</span> is given by
-<code>predict(m3, &quot;prob&quot;)[,1]</code></li>
+<code>1 - predict(m3, &quot;prob&quot;)[,1]</code></li>
 </ul>
 </div>
 </div>
 <div id="next-steps" class="section level2">
 <h2>Next steps</h2>
 <p>Now that you have seen how to fit a Poisson hurdle model, our next
-steps will be to discuss inference and diagnostics with hurdle
-models.</p>
+steps will be to discuss inference and diagnostics with hurdle models.
+We will continue discussing hurdle models after fall break.</p>
 </div>
 </div>
 

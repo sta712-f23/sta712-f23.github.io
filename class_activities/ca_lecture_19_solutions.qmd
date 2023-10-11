@@ -1,0 +1,81 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+1. 
+
+```{r, message=F, warning=F}
+library(AER)
+library(MASS)
+library(pscl)
+library(tidyverse)
+
+data("NMES1988")
+nmes <- NMES1988 |>
+  dplyr::select(visits, hospital, health, chronic, gender, school, insurance)
+
+m1 <- glm(visits ~ ., family = poisson, data = nmes)
+```
+
+2.
+
+```{r}
+sum(dpois(x = 0, lambda = m1$fitted.values))
+```
+
+
+The Poisson model only predicts about 47 0s, when really there are 683. Quite a big difference!
+
+3.
+
+```{r}
+m2 <- glm.nb(visits ~ ., data = nmes)
+summary(m2)
+```
+
+```{r}
+sum(dnbinom(0, size=1.2066, mu = m2$fitted.values))
+```
+
+The NB model predicts about 608 0s. Much closer to the truth, but perhaps still slightly underestimating.
+
+4.
+
+```{r}
+m3 <- hurdle(visits ~ ., dist = "poisson", zero.dist = "binomial",
+             data = nmes)
+summary(m3)
+```
+
+In the hurdle model, $p_i = P(Y_i > 0)$ (i.e., the probability of at least one physician visit). The coefficient on `school` is positive in the logistic component (0.058541), so individuals with more years of education are more likely to visit a physician at least once, holding other variables fixed.
+
+5.
+
+The coefficients of the count model give us information about individuals who visited a physician at least once (i.e., $Y_i|(Y_i > 0)$). In this case, the coefficient on `healthpoor` is positive (0.253521), so among individuals who visited a physician at least once, those with poor health tend to have more visits (holding other variables fixed).
+
+6.
+
+```{r}
+X_count <- model.matrix(m3, "count")
+X_zero <- model.matrix(m3, "zero")
+
+p_hat <- 1 - predict(m3, type = "prob")[,1]
+lambda_hat <- predict(m3, type="count")
+
+solve(t(X_zero) %*% diag(p_hat * (1 - p_hat)) %*% X_zero)
+vcov(m3, "zero")
+
+solve(t(X_count) %*% diag(lambda_hat * exp(lambda_hat)*(-lambda_hat + exp(lambda_hat)- 1) 
+                    * p_hat /((exp(lambda_hat) - 1)^2)) %*% X_count)
+
+vcov(m3, "count")
+```
+
+
+
+
+
+

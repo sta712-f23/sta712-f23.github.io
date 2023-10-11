@@ -149,10 +149,10 @@ vcov(m3, "zero")
 Verify that the estimated variance-covariance matrix from the `pscl` package agrees with the inverse Fisher information $I^{-1}(\beta, \gamma)$, with $I(\beta, \gamma)$ defined above. (The numbers should be close when you compute it yourself, though they might not be exactly identical).
 
 * $\widehat{\lambda}_i$ is given by `predict(m3, "count")`
-* $\widehat{p}_i$ is given by `predict(m3, "prob")[,1]`
+* $\widehat{p}_i$ is given by `1 - predict(m3, "prob")[,1]`
 :::
 
 ## Next steps
 
-Now that you have seen how to fit a Poisson hurdle model, our next steps will be to discuss inference and diagnostics with hurdle models.
+Now that you have seen how to fit a Poisson hurdle model, our next steps will be to discuss inference and diagnostics with hurdle models. We will continue discussing hurdle models after fall break.
 
