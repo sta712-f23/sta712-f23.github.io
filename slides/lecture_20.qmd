@@ -1,0 +1,140 @@
+---
+title: "Lecture 20"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r include=F}
+library(tidyverse)
+library(knitr)
+library(gridExtra)
+library(statmod)
+hook_output <- knit_hooks$get("output")
+knit_hooks$set(output = function(x, options) {
+   lines <- options$output.lines
+   if (is.null(lines)) {
+     return(hook_output(x, options))  # pass to default hook
+   }
+   x <- unlist(strsplit(x, "\n"))
+   more <- "..."
+   if (length(lines)==1) {        # first n lines
+     if (length(x) > lines) {
+       # truncate the output, but add ....
+       x <- c(head(x, lines), more)
+     }
+   } else {
+     x <- c(more, x[lines], more)
+   }
+   # paste these lines together
+   x <- paste(c(x, ""), collapse = "\n")
+   hook_output(x, options)
+ })
+
+```
+
+## Data from last time
+
+Survey data from 77 college students on a dry campus (i.e., alcohol is prohibited) in the US. Survey asks students "How many alcoholic drinks did you consume last weekend?"
+
+* `drinks`: number of drinks the student reports consuming
+* `sex`: whether the student identifies as male
+* `OffCampus`: whether the student lives off campus
+* `FirstYear`: whether the student is a first-year student
+
+Our goal: model the number of drinks students report consuming.
+
+```{r include=F}
+library(tidyverse)
+
+wdrinks <- read.csv("~/Documents/Teaching/sta279-s22.github.io/slides/weekendDrinks.csv")
+
+FirstYear <- ifelse( wdrinks$dorm %in% c("mohn","kittlesby", "kildahl"), "TRUE", "FALSE")
+OffCampus <- ifelse( wdrinks$dorm == "off campus", "TRUE", "FALSE")
+
+wdrinks <- cbind(wdrinks, FirstYear, OffCampus)
+```
+
+## Recap: Poisson hurdle model
+
+## Fitting Poisson hurdle models
+
+## Fitting the model in R
+
+```{r, message=F, warning=F}
+library(pscl)
+
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+m1$coefficients
+```
+
+## Model assumptions
+
+```{r}
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+m1$coefficients
+```
+
+What assumptions does this model make?
+
+## Model diagnostics
+
+## Rootograms
+
+```{r, message=F, warning=F}
+library(countreg)
+rootogram(m1)
+```
+
+## Other examples with rootograms
+
+```{r, fig.align='center', fig.width=12, fig.height=5}
+par(mfrow=c(1, 2))
+
+x <- rnorm(1000)
+y <- rnbinom(1000, 0.5, mu=exp(1.5 + 0.2*x))
+m1 <- glm(y ~ x, family = poisson)
+m2 <- glm.nb(y ~ x)
+
+rootogram(m1)
+rootogram(m2)
+```
+
+```{r, include=F}
+par(mfrow=c(1,1))
+```
+
+
+
+## Hurdle models for count data
+
+$$P(Y_i > 0) = p_i \hspace{1cm} g_{zero}(p_i) = \gamma^T X_i$$
+
+$$Y_i | (Y_i > 0) \sim ZT(\lambda_i) \hspace{1cm} g_{count}(\lambda_i) = \beta^T X_i$$
+
+## Negative binomial hurdle model
+
+```{r}
+m2 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "negbin", zero.dist = "binomial",
+             data = wdrinks)
+
+rootogram(m2)
+```
+
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_20.html](https://sta712-f23.github.io/class_activities/ca_lecture_20.html)
+

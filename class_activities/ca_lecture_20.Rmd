@@ -1,0 +1,248 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Recap: hurdle models
+
+A *hurdle model* allows for excess 0s by separately modeling $P(Y_i > 0)$, and the distribution of $Y_i|(Y_i > 0)$. In general, the hurdle model looks like this:
+
+$$P(Y_i > 0) = p_i \hspace{1cm} g_{zero}(p_i) = \gamma^T X_i$$
+
+$$Y_i | (Y_i > 0) \sim ZT(\lambda_i) \hspace{1cm} g_{count}(\lambda_i) = \beta^T X_i$$
+
+where $ZT(\lambda_i)$ denotes a zero-truncated count distribution with parameter $\lambda_i$ (usually, what the mean would be if the count distribution were not truncated). We usually use logistic regression for the zero component of the model, so $g_{zero}$ is the logit link. For count data, usually $g_{count}(\lambda_i) = \log(\lambda_i)$.
+
+For example, a Poisson hurdle model looks like this:
+
+$$P(Y_i > 0) = p_i \hspace{1cm} \log \left( \frac{p_i}{1 - p_i} \right) = \gamma^T X_i$$
+$$Y_i|(Y_i > 0) \sim PosPoisson(\lambda_i) \hspace{1cm} \log(\lambda_i) = \beta^T X_i$$
+
+There are two components to this model: 
+
+* The first component models whether or not $Y_i = 0$ (using logistic regression). The coefficients $\gamma$ correspond to the first component.
+* If $Y_i > 0$, then the second component models the distribution of $Y_i$ with a positive Poisson (aka zero-truncated Poisson) distribution. Recall that $Y \sim PosPoisson(\lambda)$ if $P(Y = y) = \dfrac{\lambda \exp\{-\lambda\}}{y!(1 - \exp\{-\lambda\})}$ for $y = 1, 2, 3, ...$
+
+Similarly, a negative binomial hurdle looks like this:
+
+$$P(Y_i > 0) = p_i \hspace{1cm} \log \left( \frac{p_i}{1 - p_i} \right) = \gamma^T X_i$$
+$$Y_i|(Y_i > 0) \sim ZTNB(r, \lambda_i) \hspace{1cm} \log(\lambda_i) = \beta^T X_i$$
+where $ZTNB$ denotes a zero-truncated negative binomial distribution. Here $r$ and $\lambda_i$ are the size and mean for the non-truncated negative binomial.
+
+
+# Part I: Diagnostics with hurdle models
+
+In the first part of this class activity, we will explore diagnostics with Poisson and negative binomial hurdle models.
+
+To begin, let's simulate data from a Poisson hurdle model. We will need the `countreg` package, which can be installed with the following code:
+
+```{r, eval=F}
+install.packages("countreg", repos="http://R-Forge.R-project.org")
+```
+
+Now use the code below to simulate from a Poisson hurdle model:
+
+```{r, eval=F}
+library(countreg)
+
+n <- 1000
+
+x <- rnorm(n)
+p <- exp(0.5 + x)/(1 + exp(0.5 + x))
+lambda <- exp(-0.2 + 0.7*x)
+
+z <- rbinom(n, 1, p)
+y <- rztpois(n, lambda = lambda)*z
+```
+
+:::{.question}
+#### Question 1
+
+Fit a Poisson hurdle model to your simulated data, and confirm that the estimated coefficients are close to the true coefficients.
+:::
+
+## Quantile residual plots
+
+As with previous models, quantile residual plots can be used to assess the shape and distribution assumptions of hurdle models. The following code creates a quantile residual plot for a fitted hurdle model `m1`:
+
+```{r, eval=F}
+library(tidyverse)
+
+data.frame(x = x, resids = countreg::qresiduals(m1)) |>
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw()
+```
+
+
+:::{.question}
+#### Question 2
+
+Create the quantile residual plot, and confirm that the plot shows no violations of the model assumptions.
+:::
+
+## Rootograms
+
+Another way of assessing model fit is with a *rootogram*. A rootogram compares the observed and expected counts for a count model (note that rootograms can be used with Poisson and negative binomial models too! They are not just restricted to hurdle models).
+
+The `rootogram` function in the `countreg` package will produce a rootogram for your fitted model:
+
+```{r, eval=F}
+rootogram(m1)
+```
+
+:::{.question}
+#### Question 3
+
+Create a rootogram for your fitted Poisson hurdle model, and verify that the observed and expected counts are close.
+:::
+
+
+## Breaking the shape assumption
+
+Now let's see what happens when we break the shape assumption in our hurdle model. There are two components to a hurdle model, so really there are two places the shape assumption can be violated (the zero model and the count model).
+
+:::{.question}
+#### Question 4
+
+Modify your code from question 1 so that the shape assumption is violated for the Poisson hurdle model. Then create a quantile residual plot for your new fitted model. Does the plot show violations of the model assumptions? Can you tell whether the violations occur in the zero component, the count component, or both?
+:::
+
+To help disentangle violations in the zero component from violations in the count component, here is code to create separate quantile residual plots for the two components:
+
+```{r, eval=F}
+library(tidyverse)
+library(patchwork)
+
+## randomized quantile residuals for count data in hurdle model
+## m = fitted hurdle model (poisson or negative binomial)
+qresid_count <- function(m){
+  y <- m$y
+  x <- model.matrix(m, "count")
+  x <- x[y > 0,]
+  y <- y[y > 0]
+  lambdas <- exp(x %*% m$coefficients$count)
+  
+  dist <- m$dist$count
+  if(dist == "poisson"){
+    cdf_b <- c(pztpois(y, lambda = lambdas))
+    cdf_a <- c(suppressWarnings(pztpois(y-1, lambda = lambdas)))
+  } else if(dist == "negbin"){
+    cdf_b <- c(pztnbinom(y, mu = lambdas, size=m$theta))
+    cdf_a <- c(suppressWarnings(pztnbinom(y-1, mu = lambdas, size=m$theta)))
+  } else {
+    return("Error: please use a poisson or negative binomial hurdle model")
+  }
+  
+  resids <- qnorm(runif(length(y), cdf_a, cdf_b))
+  
+  return(resids)
+}
+
+# randomized quantile residuals for the binomial component
+qresid_zero <- function(m){
+  z <- m$y > 0
+  x <- model.matrix(m, "zero")
+  p <- exp(x %*% m$coefficients$zero)/(1 + exp(x %*% m$coefficients$zero))
+  
+  u <- ifelse(z == 1, runif(length(z), 1-p, 1), runif(length(z), 0, 1-p))
+  return(qnorm(u))
+}
+
+p1 <- data.frame(x = x[y > 0], resids = qresid_count(m1)) |>
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(y = "Quantile residuals", title = "Count component")
+
+p2 <- data.frame(x = x, resids = qresid_zero(m1)) |>
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(y = "Quantile residuals", title = "Zero component")
+
+p1 + p2
+```
+
+
+:::{.question}
+#### Question 5
+
+Use the code above to create separate quantile residual plots for your simulated data and model in question 4.
+:::
+
+:::{.question}
+#### Question 6
+
+Verify that creating separate quantile residual plots for the count and zero components can detect which component is the source of model violations.
+:::
+
+## Breaking the distribution assumption
+
+The Poisson hurdle model assumes that $Y_i|(Y_i > 0)$ follows a zero-truncated Poisson (aka positive Poisson) distribution. The "zero-truncated" part of that assumption is fine, because $Y_i|(Y_i > 0)$ *is* zero-trucated! But what about the "Poisson" part?
+
+Just as with the other count models we have discussed, using a zero-truncated Poisson distribution is a poor choice when there is greater variability in the counts than the model allows. And just as we did previously, we can use a zero-truncated negative binomial model instead to allow for that extra variation (see above for a description of the negative binomial hurdle model).
+
+The code below simulates data from a negative binomial hurdle model:
+
+```{r, eval=F}
+n <- 1000
+
+x <- rnorm(n)
+p <- exp(0.5 + x)/(1 + exp(0.5 + x))
+lambda <- exp(-0.2 + 0.7*x)
+
+z <- rbinom(n, 1, p)
+y <- rztnbinom(n, mu = lambda, size = 0.2)*z
+```
+
+:::{.question}
+#### Question 7
+
+Fit a Poisson hurdle model to the simulated data. Create quantile residual plots and a rootogram for the fitted model, and verify that you can detect violations of the distribution assumption.
+:::
+
+If the Poisson hurdle model doesn't fit well, we can try the negative binomial hurdle instead:
+
+```{r, eval=F}
+m2 <- hurdle(y ~ x, dist = "negbin", zero.dist = "binomial")
+```
+
+
+:::{.question}
+#### Question 8
+
+Create diagnostic plots for your fitted negative binomial hurdle model. How do the model diagnostics look?
+:::
+
+# Part II: Back to the NMES data
+
+In the second part of this class activity, let's go back to the NMES data we worked with previously:
+
+```{r, eval=F}
+library(AER)
+
+data("NMES1988")
+nmes <- NMES1988 |>
+  select(visits, hospital, health, chronic, gender, school, insurance)
+```
+
+**Goal:** Model the number of visits using the other variables in the data (number of hospital stays, health status, number of years of education, etc.)
+
+## Diagnostics
+
+:::{.question}
+#### Question 9
+
+Use diagnostic plots to choose an appropriate model for the number of visits. Make sure to assess both the shape and distribution assumptions.
+:::
+
+
+
