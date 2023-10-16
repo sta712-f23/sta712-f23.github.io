@@ -1,0 +1,235 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+## Part I
+
+```{r}
+set.seed(11)
+r <- 1
+x <- rnorm(1000, mean=0, sd=1.2)
+y1 <- rpois(1000, lambda = exp(x))
+y2 <- rnbinom(1000, size=r, mu=exp(x))
+```
+
+```{r}
+plot(x, y1, main = "Poisson response")
+plot(x, y2, main = "Negative binomial response")
+```
+
+1. There is much more variability in the negative binomial data than in the Poisson data. (If we change the size parameter `r`, we can control the variability in the NB data. Increasing `r` will decrease the variability, and make the data look closer to the Poisson data).
+
+```{r, message=F, warning=F}
+library(MASS)
+library(statmod)
+library(tidyverse)
+
+m1 <- glm(y1 ~ x, family = poisson)
+m2 <- glm.nb(y1 ~ x)
+
+summary(m1)
+summary(m2)
+
+data.frame(x = x, resids = qresid(m1)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "X", y = "Quantile residuals",
+       title = "Poisson regression on Poisson data") +
+  theme_bw()
+
+data.frame(x = x, resids = qresid(m2)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "X", y = "Quantile residuals",
+       title = "Negative binomial regression on Poisson data") +
+  theme_bw()
+```
+
+2. The estimated coefficients for the two models are almost identical. For the NB model, $\widehat{r} = 4124$ (you will get different estimates for different seeds).
+
+3. Both quantile residual plots look good.
+
+```{r, message=F, warning=F}
+m1 <- glm(y2 ~ x, family = poisson)
+m2 <- glm.nb(y2 ~ x)
+
+summary(m1)
+summary(m2)
+
+data.frame(x = x, resids = qresid(m1)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "X", y = "Quantile residuals",
+       title = "Poisson regression on negative binomial data") +
+  theme_bw()
+
+data.frame(x = x, resids = qresid(m2)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "X", y = "Quantile residuals",
+       title = "Negative binomial regression on negative binomial data") +
+  theme_bw()
+```
+
+4. The estimated coefficients are pretty similar. 
+
+5. The quantile residual plot for the Poisson model shows a clear violation of the assumptions, with increasing variability and non-constant variance.
+
+## Part II
+
+```{r, message=F, warning=F}
+r <- 0.5
+x <- rnorm(1000, mean=0, sd=1.2)
+y <- rnbinom(1000, size=r, mu=exp(x))
+
+m1 <- glm(y ~ x, family = poisson)
+m2 <- glm.nb(y ~ x)
+
+data.frame(x = x, resids = qresid(m1)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "X", y = "Quantile residuals",
+       title = "Poisson regression") +
+  theme_bw()
+
+data.frame(x = x, resids = qresid(m2)) %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "X", y = "Quantile residuals",
+       title = "Negative binomial regression") +
+  theme_bw()
+```
+
+As before the Poisson quantile residual plot shows clear violations of the model assumptions.
+
+```{r, message=F, warning=F}
+rs <- c(0.5, 1, 2, 5, 10)
+coverage_poisson <- rep(NA, length(rs))
+coverage_qp <- rep(NA, length(rs))
+coverage_nb <- rep(NA, length(rs))
+
+nsim <- 200
+
+for(i in 1:length(rs)){
+  r <- rs[i]
+  covers_poisson <- rep(NA, nsim)
+  covers_qp <- rep(NA, nsim)
+  covers_nb <- rep(NA, nsim)
+  
+  for(j in 1:nsim){
+    x <- rnorm(1000, mean=0, sd=1.2)
+    y <- rnbinom(1000, size=r, mu=exp(x))
+    
+    m1 <- glm(y ~ x, family = poisson)
+    m2 <- glm.nb(y ~ x)
+    m3 <- glm(y ~ x, family = quasipoisson)
+    
+    lower_p <- m1$coefficients[2] - 1.96*summary(m1)$coefficients[2,2]
+    upper_p <- m1$coefficients[2] + 1.96*summary(m1)$coefficients[2,2]
+    
+    lower_nb <- m2$coefficients[2] - 1.96*summary(m2)$coefficients[2,2]
+    upper_nb <- m2$coefficients[2] + 1.96*summary(m2)$coefficients[2,2]
+    
+    lower_qp <- m3$coefficients[2] - qt(0.975, 998)*summary(m3)$coefficients[2,2]
+    upper_qp <- m3$coefficients[2] + qt(0.975, 998)*summary(m3)$coefficients[2,2]
+    
+    covers_poisson[j] <- lower_p < 1 & upper_p > 1
+    covers_nb[j] <- lower_nb < 1 & upper_nb > 1
+    covers_qp[j] <- lower_qp < 1 & upper_qp > 1
+  }
+  
+  coverage_poisson[i] <- mean(covers_poisson)
+  coverage_qp[i] <- mean(covers_qp)
+  coverage_nb[i] <- mean(covers_nb)
+}
+```
+
+```{r}
+data.frame(r = rs, coverage_poisson, coverage_qp, coverage_nb) |>
+  pivot_longer(cols = -r,
+               names_to = c(".value", "method"),
+               names_sep = "_") |>
+  ggplot(aes(x = r, y = coverage, color = method)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+```
+
+For small values of $r$, both the Poisson and quasi-Poisson models fail to achieve the desired coverage. The quasi-Poisson model does better than the Poisson model, but still has much lower than 95% coverage. As $r$ increases, the negative binomial distribution approaches a Poisson distribution, and coverage for the Poisson and quasi-Poisson models increases.
+
+
+
+
+```{r, message=F, warning=F}
+# Function for simulating quasi-Poisson (overdispersed Poisson) data
+rqpois <- function(n, mean, dispersion){
+  return(rnbinom(n, mu = mean, size = mean/(dispersion - 1)))
+}
+
+phis <- c(1, 2, 3, 5, 10)
+coverage_poisson <- rep(NA, length(rs))
+coverage_qp <- rep(NA, length(rs))
+coverage_nb <- rep(NA, length(rs))
+
+nsim <- 200
+
+for(i in 1:length(rs)){
+  covers_poisson <- rep(NA, nsim)
+  covers_qp <- rep(NA, nsim)
+  covers_nb <- rep(NA, nsim)
+  
+  for(j in 1:nsim){
+    x <- rnorm(1000, mean=0, sd=1.2)
+    y <- rqpois(1000, mean = exp(x), dispersion = phis[i])
+    
+    m1 <- glm(y ~ x, family = poisson)
+    m2 <- glm.nb(y ~ x)
+    m3 <- glm(y ~ x, family = quasipoisson)
+    
+    lower_p <- m1$coefficients[2] - 1.96*summary(m1)$coefficients[2,2]
+    upper_p <- m1$coefficients[2] + 1.96*summary(m1)$coefficients[2,2]
+    
+    lower_nb <- m2$coefficients[2] - 1.96*summary(m2)$coefficients[2,2]
+    upper_nb <- m2$coefficients[2] + 1.96*summary(m2)$coefficients[2,2]
+    
+    lower_qp <- m3$coefficients[2] - qt(0.975, 998)*summary(m3)$coefficients[2,2]
+    upper_qp <- m3$coefficients[2] + qt(0.975, 998)*summary(m3)$coefficients[2,2]
+    
+    covers_poisson[j] <- lower_p < 1 & upper_p > 1
+    covers_nb[j] <- lower_nb < 1 & upper_nb > 1
+    covers_qp[j] <- lower_qp < 1 & upper_qp > 1
+  }
+  
+  coverage_poisson[i] <- mean(covers_poisson)
+  coverage_qp[i] <- mean(covers_qp)
+  coverage_nb[i] <- mean(covers_nb)
+}
+```
+
+```{r}
+data.frame(phi = phis, coverage_poisson, coverage_qp, coverage_nb) |>
+  pivot_longer(cols = -phi,
+               names_to = c(".value", "method"),
+               names_sep = "_") |>
+  ggplot(aes(x = phi, y = coverage, color = method)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+```
+
+Coverage for the Poisson model drops substantially as dispersion increases. Coverage for the quasi-Poisson model stays around 95%. Coverage for the negative binomial model actually decreases somewhat for large values of $\phi$, because the negative binomial model is not capturing the correct mean-variance relationship.
+
+**Key take-aways:**
+
+* If you think there is overdispersion or a nonlinear mean-variance relationship, don't use a Poisson model!
+* quasi-Poisson models are only suitable if you really believe there is a linear mean-variance relationship
+* if you see non-constant variance in the quantile residual plot for a Poisson model, use a negative binomial model instead
