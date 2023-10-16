@@ -21,12 +21,12 @@ $$F = \dfrac{(D(y, \widehat{\mu}_{red}) - D(y, \widehat{\mu}_{full}))/(df_{red} 
 
 Plugging in the values from the R output, we get
 
-$$F = \dfrac{(11544 - 11540)/3}{5.76} = 0.231$$
+$$F = \dfrac{(11544 - 11540)/3}{5.52} = 0.242$$
 
-We compare to an $F_{3, 11540}$ distribution to calculate a p-value:
+We compare to an $F_{3, 2004}$ distribution to calculate a p-value:
 
 ```{r}
-pf(0.231, 3, 11540, lower.tail=F)
+pf(0.242, 3, 2004, lower.tail=F)
 ```
 
 

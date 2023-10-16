@@ -375,12 +375,12 @@ Recall that the test statistic is</p>
 D(y, \widehat{\mu}_{full}))/(df_{red} -
 df_{full})}{\widehat{\phi}_{full}}\]</span></p>
 <p>Plugging in the values from the R output, we get</p>
-<p><span class="math display">\[F = \dfrac{(11544 - 11540)/3}{5.76} =
-0.231\]</span></p>
-<p>We compare to an <span class="math inline">\(F_{3, 11540}\)</span>
+<p><span class="math display">\[F = \dfrac{(11544 - 11540)/3}{5.52} =
+0.242\]</span></p>
+<p>We compare to an <span class="math inline">\(F_{3, 2004}\)</span>
 distribution to calculate a p-value:</p>
-<pre class="r"><code>pf(0.231, 3, 11540, lower.tail=F)</code></pre>
-<pre><code>## [1] 0.874847</code></pre>
+<pre class="r"><code>pf(0.242, 3, 2004, lower.tail=F)</code></pre>
+<pre><code>## [1] 0.8670604</code></pre>
 <p><strong>Question 3:</strong></p>
 <p>In the data, age ranges from about 30 to 70, so let’s consider an age
 difference of 40 years. Holding all other variables fixed, a change in
