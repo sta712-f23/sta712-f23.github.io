@@ -1,0 +1,50 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+```{r, message=F, warning=F}
+library(AER)
+library(tidyverse)
+library(pscl)
+
+data("NMES1988")
+nmes <- NMES1988 |>
+  select(visits, hospital, health, chronic, gender, school, insurance)
+m1 <- hurdle(visits ~ ., dist = "negbin", zero.dist = "binomial", data = nmes)
+```
+
+1. Perform a LRT which drops `school` completely from the reduced model:
+
+```{r}
+m2 <- hurdle(visits ~ hospital + health + chronic +
+               gender + insurance,
+             dist = "negbin", zero.dist = "binomial", data = nmes)
+
+pchisq(2*(m1$loglik - m2$loglik), 2, lower.tail=F)
+```
+
+So it seems like there is a relationship between years of education and the number of visits.
+
+2. We just want to test `insurance` in the zero hurdle component of the model. We run a one-sided test, since we want to know whether individuals with insurance are *more* likely to visit the doctor at least once.
+
+```{r}
+summary(m1)$coefficients
+pnorm(7.406, lower.tail=F)
+```
+
+3. We just want to test `gender` in the count component of the model. We run a one-sided test, since we want to know whether men visit the doctor *less* often.
+
+```{r}
+summary(m1)$coefficients
+pnorm(-2.108, lower.tail=T)
+```
+
+
+
+
+
+
+

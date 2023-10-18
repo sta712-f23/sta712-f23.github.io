@@ -1,0 +1,93 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Part I: Inference with hurdle models
+
+In this class activity, you will revisit the data on the US National Medical Expenditure Survey (NMES) from 1988. The data is available in the `AER` package. The following code loads it into R and selects a subset of columns for us to focus on:
+
+```{r, message=F, warning=F}
+library(AER)
+library(tidyverse)
+
+data("NMES1988")
+nmes <- NMES1988 |>
+  select(visits, hospital, health, chronic, gender, school, insurance)
+```
+
+**Goal:** Model the number of visits using the other variables in the data (number of hospital stays, health status, number of years of education, etc.)
+
+## Model
+
+Last time, we used model diagnostics to choose a negative binomial hurdle model:
+
+```{r, message=F, warning=F}
+library(pscl)
+m1 <- hurdle(visits ~ ., dist = "negbin", zero.dist = "binomial", data = nmes)
+summary(m1)
+```
+
+## Inference
+
+Use the negative binomial hurdle model to answer the following questions:
+
+:::{.question}
+#### Question 1
+
+Holding other variables in the model fixed, is there a relationship between years of education and the number of physician visits?
+:::
+
+:::{.question}
+#### Question 2
+
+Holding other variables in the model fixed, are individuals with insurance more likely to visit the physician *at least once*?
+:::
+
+:::{.question}
+#### Question 3
+
+Holding other variables in the model fixed, among individuals who visited the physician at least once, do men see the physician less frequently?
+:::
+
+# Part II: Intro to zero-inflated models
+
+So far, we have learned about hurdle models as a method for handling excess 0s in our count data. What else could we do to handle excess 0s? An alternative approach is a *zero-inflated* model. Common zero-inflated models include zero-inflated Poisson (ZIP) and zero-inflated negative binomial (ZINB) models.
+
+To introduce you to the zero-inflated Poisson, in the second part of this class activity you will read the foundational paper on ZIP models:
+
+[Lambert, D. (1992). Zero-inflated Poisson regression, with an application to defects in manufacturing. *Technometrics*, 34(1), 1-14.](https://www.jstor.org/stable/1269547)
+
+The questions below will help guide you through the paper.
+
+## Questions
+
+:::{.question}
+#### Question 4
+
+Begin by reading Section 1 (Motivating Application). What is the motivation for the paper? Why is a regular Poisson model not appropriate?
+:::
+
+:::{.question}
+#### Question 5
+
+Read Section 2, and write down the full ZIP model. How is the ZIP model different from the Poisson hurdle model we have discussed?
+:::
+
+:::{.question}
+#### Question 6
+
+Skim Section 3.1 (you do not need to read all the details just yet). How is the ZIP model fit? Why is this approach necessary (instead of the usual way we maximize likelihoods for models like Poisson regression or Poisson hurdle regression)?
+:::
+
+:::{.question}
+#### Question 7
+
+Read Section 5.2. Is a regular negative binomial model (no zero-inflation or hurdle component) sufficient for fitting the data, or is zero-inflation required?
+:::
+
+

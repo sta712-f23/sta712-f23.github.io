@@ -1,0 +1,135 @@
+---
+title: "Lecture 21"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Last time
+
+Survey data from 77 college students on a dry campus (i.e., alcohol is prohibited) in the US. Survey asks students "How many alcoholic drinks did you consume last weekend?"
+
+* `drinks`: number of drinks the student reports consuming
+* `sex`: whether the student identifies as male
+* `OffCampus`: whether the student lives off campus
+* `FirstYear`: whether the student is a first-year student
+
+Our goal: model the number of drinks students report consuming.
+
+## Last time
+
+```{r include=F}
+library(tidyverse)
+
+wdrinks <- read.csv("~/Documents/Teaching/sta279-s22.github.io/slides/weekendDrinks.csv")
+
+FirstYear <- ifelse( wdrinks$dorm %in% c("mohn","kittlesby", "kildahl"), "TRUE", "FALSE")
+OffCampus <- ifelse( wdrinks$dorm == "off campus", "TRUE", "FALSE")
+
+wdrinks <- cbind(wdrinks, FirstYear, OffCampus)
+```
+
+```{r, message=F, warning=F}
+library(pscl)
+
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+m1$coefficients
+```
+
+**Question:** I want to know whether there is a relationship between sex and the number of drinks a student reports consuming (after accounting for other variables). What hypotheses should I test?
+
+## Hypothesis tests
+
+```{r}
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+m2 <- hurdle(drinks ~ FirstYear + OffCampus,
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+2*(m1$loglik - m2$loglik)
+pchisq(2*(m1$loglik - m2$loglik), 2, lower.tail=F)
+```
+
+## Hypothesis tests
+
+```{r}
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+m1$coefficients
+```
+
+**Question:** I want to know whether there is a relationship between sex and whether a student reports consuming *any* drinks. What hypotheses should I test?
+
+## Hypothesis tests
+
+```{r}
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+m2 <- hurdle(drinks ~ sex + FirstYear + OffCampus | FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+m2$coefficients
+```
+
+## Hypothesis tests
+
+```{r}
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+m2 <- hurdle(drinks ~ sex + FirstYear + OffCampus | FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+pchisq(2*(m1$loglik - m2$loglik), df=1, lower.tail=F)
+```
+
+## Hypothesis tests
+
+```{r}
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+m1$coefficients
+```
+
+**Question:** *Among students who report at least one drink*, I want to know whether male students tend to drink *more*. What hypotheses should I test?
+
+## Hypothesis tests
+
+```{r}
+m1 <- hurdle(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson", zero.dist = "binomial",
+             data = wdrinks)
+
+summary(m1)$coefficients
+pnorm(5.233, lower.tail=F)
+```
+
+## What's next
+
+* Problem: excess zeros!
+* Solution so far: hurdle model (Poisson, negative binomial, etc.)
+* Alternative method: zero-inflated models
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_21.html](https://sta712-f23.github.io/class_activities/ca_lecture_21.html)
+
+
