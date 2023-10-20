@@ -1,0 +1,31 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+# Part I
+
+1. $\log \left( \frac{\widehat{p}_i}{1- \widehat{p}_i} \right) = 0.6 + 1.14$, so $\widehat{p}_i = 0.63$
+
+2. $\widehat{\lambda_i} = \exp\{0.75 + 0.42 + 1.02\} = 8.93$
+
+3. $P(Y_i > 0) = 1 - P(Y_i = 0) = 1 - (e^{-\widehat{\lambda}_i}(1 - \widehat{p}_i) + \widehat{p}_i) = 0.37$
+
+# Part II
+
+1. Two sources of zeros: those who never smoke, and those who sometimes smoke (but just didn't during the study period).
+
+2. Among smokers, having diabetes is associated with a decrease in the average number of cigarettes by a factor of $\exp\{0.046\} = 1.05$, holding education fixed.
+
+3. $\widehat{p}_i = \frac{e^{-2.51 + 0.051(50)}}{1 + e^{-2.51 + 0.051(50)}} \approx 0.51$
+
+4. Note that we are *not* conditioning on whether they are a smoker or not! $\mathbb{E}[Y_i | Z_i = 1] = 0$ and $\mathbb{E}[Y_i | Z_i = 0] = \lambda_i$, so $\mathbb{E}[Y_i] = \lambda_i(1 - p_i)$. Here, we get $17.5(1 - 0.51) = 8.6$
+
+
+
+
+
+
+

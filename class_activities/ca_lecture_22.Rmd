@@ -84,6 +84,6 @@ summary(m1)
 
 3. What is the estimated probability that a 50 year old does not smoke?
 
-4. What is the expected number of cigarettes smoked per day, for a smoker with diabetes and some college education?
+4. What is the expected number of cigarettes smoked per day, for a 50-year-old smoker with diabetes and some college education?
 
 
