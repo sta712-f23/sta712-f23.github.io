@@ -1,0 +1,89 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# Part I: Campus drinking
+
+In the first part of this class activity, we work with survey data from 77 college students on a dry campus (i.e., alcohol is prohibited) in the US. The survey asks students "How many alcoholic drinks did you consume last weekend?" The data includes the following variables:
+
+* `drinks`: the number of drinks the student reports consuming
+* `sex`: an indicator for whether the student identifies as male (1 = male)
+* `OffCampus`: an indicator for whether the student lives off campus (1 = off campus, 0 = on campus)
+* `FirstYear`: an indicator for whether the student is a first-year student (1 = first year, 0 = not first year)
+
+## The model
+
+To account for excess zeros in the data, we fit a *zero-inflated Poisson* (ZIP) model. Here is the probability function for our model:
+
+$$P(Y_i = y) = \begin{cases} e^{-\lambda_i}(1 - p_i) + p_i & y = 0 \\ \dfrac{e^{-\lambda_i} \lambda_i^y}{y!}(1 - p_i) & y > 0 \end{cases}$$
+
+The fitted model estimates $p_i$ with a logistic regression component, and $\lambda_i$ with a Poisson regression component. The fitted model is
+
+$\log \left( \dfrac{\widehat{p}_i}{1 - \widehat{p}_i} \right) = -0.60 + 1.14 FirstYear_i$
+
+$\log(\widehat{\lambda}_i) = 0.75 + 0.42 \ OffCampus_i + 1.02 \ Male_i$
+
+## Questions
+
+1. What is the estimated probability that a first year student never drinks?
+
+2. What is the estimated average number of drinks for a male student who lives off campus and sometimes drinks?
+
+3. What is the estimated probability that a male first year student who lives off campus had at least one drink last weekend?
+
+# Part II: Framingham heart data
+
+In the second part of this class activity, we work with the Framingham heart study data. This data includes the following variables (among others):
+
+* `cigsPerDay`: The number of cigarettes smoked per day during the study period.
+* `education`: 1 = High School, 2 = Some College, 3 = College Degree, 4 = Advanced Degree.
+* `male`: 1 = Male, 0 = Female.
+* `age`: The age of the individual in years.
+* `diabetes`: 1 if the individual has diabetes, 0 otherwise.
+
+We are interested in modeling the number of cigarettes smoked per day (`cigsPerDay`).
+
+## The model
+
+Researchers suspect that whether or not someone smokes depends on their age, and that if they do smoke, the number of cigarettes smoked is related to their education level and whether they have diabetes. The researchers therefore fit the following ZIP model:
+
+$$P(Y_i = y) = \begin{cases} e^{-\lambda_i}(1 - p_i) + p_i & y = 0 \\ \dfrac{e^{-\lambda_i} \lambda_i^y}{y!}(1 - p_i) & y > 0 \end{cases}$$
+
+$\log \left( \dfrac{p_i}{1 - p_i} \right) = \gamma_0 + \gamma_1 Age_i$
+
+$\log(\lambda_i) = \beta_0 + \beta_1 EducationSome_i + \beta_2 EducationCollege_i + \beta_3 EducationAdv_i + \beta_4 Diabetes_i$
+
+The R output below shows their fitted model.
+
+```{r, include=F}
+library(tidyverse)
+heart_data <- read.csv("~/Documents/Teaching/sta214-f22.github.io/class_activities/framingham.csv")
+
+heart_data <- heart_data %>%
+  drop_na(male, age, education, diabetes, cigsPerDay) %>%
+  mutate(education = as.factor(education))
+```
+
+```{r, message=F, warning=F}
+library(pscl)
+m1 <- zeroinfl(cigsPerDay ~ education + diabetes | age, 
+               data = heart_data)
+summary(m1)
+```
+
+## Questions
+
+1. Why might a ZIP model be appropriate for this data? What would the latent variable represent?
+
+2. Interpret the coefficient -0.046 in the fitted model.
+
+3. What is the estimated probability that a 50 year old does not smoke?
+
+4. What is the expected number of cigarettes smoked per day, for a smoker with diabetes and some college education?
+
+

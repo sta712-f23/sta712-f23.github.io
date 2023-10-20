@@ -1,0 +1,63 @@
+---
+title: "Lecture 22"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Last time
+
+Survey data from 77 college students on a dry campus (i.e., alcohol is prohibited) in the US. Survey asks students "How many alcoholic drinks did you consume last weekend?"
+
+* `drinks`: number of drinks the student reports consuming
+* `sex`: whether the student identifies as male
+* `OffCampus`: whether the student lives off campus
+* `FirstYear`: whether the student is a first-year student
+
+**Question:** Why might students report 0 drinks?
+
+## Paper de-brief
+
+How did Lambert (1992) address the problem of excess 0s?
+
+## Zero-inflated Poisson (ZIP) model
+
+## In R
+
+```{r include=F}
+library(tidyverse)
+
+wdrinks <- read.csv("~/Documents/Teaching/sta279-s22.github.io/slides/weekendDrinks.csv")
+
+FirstYear <- ifelse( wdrinks$dorm %in% c("mohn","kittlesby", "kildahl"), "TRUE", "FALSE")
+OffCampus <- ifelse( wdrinks$dorm == "off campus", "TRUE", "FALSE")
+
+wdrinks <- cbind(wdrinks, FirstYear, OffCampus)
+```
+
+```{r, message=F, warning=F}
+library(pscl)
+
+m1 <- zeroinfl(drinks ~ sex + FirstYear + OffCampus, 
+             dist = "poisson",
+             data = wdrinks)
+
+m1$coefficients
+```
+
+## Paper de-brief
+
+How did Lamber (1992) propose fitting the ZIP model?
+
+## Fitting ZIP models
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_22.html](https://sta712-f23.github.io/class_activities/ca_lecture_22.html)
+
+
