@@ -1,0 +1,21 @@
+---
+title: "Lecture 23"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Recap: fitting ZIP models
+
+## EM algorithm
+
+## E step
+
+## M step
+
+
