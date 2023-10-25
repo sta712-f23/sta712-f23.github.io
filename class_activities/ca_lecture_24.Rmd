@@ -1,0 +1,177 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# The EM algorithm for fitting ZIP models
+
+## The ZIP model
+
+Suppose we have the following ZIP model:
+
+$$Z_i \sim Bernoulli(p_i) \hspace{0.5cm} \log \left(\frac{p_i}{1 - p_i} \right) = \gamma^T X_i$$
+
+$$Y_i | (Z_i = 1) = 0 \hspace{1cm} Y_i | (Z_i = 0) \sim Poisson(\lambda_i) \hspace{0.5cm} \log(\lambda_i) = \beta^T X_i$$
+The distribution of $Y_i$ depends on the unobserved latent variable $Z_i$, which accounts for excess zeroes.
+
+## log-likelihoods
+
+*If* the latent variable $Z_i$ were observed, the complete-data log-likelihood would be
+
+$$\ell(\gamma, \beta; Y, Z) =  \ell(\gamma; Y, Z) + \ell(\beta; Y, Z)$$
+
+where
+
+$$\ell(\gamma; Y, Z) = \sum \limits_{i=1}^n \left\lbrace Z_i \log\left( \frac{p_i}{1 - p_i} \right) + \log(1 - p_i) \right\rbrace$$
+
+$$\ell(\beta; Y, Z) = \sum \limits_{i=1}^n (1 - Z_i)(Y_i \log(\lambda_i) - \lambda_i) - \sum \limits_{i=1}^n (1 - Z_i) \log(Y_i!)$$
+
+If we knew the $Z_i$, we could separately maximize the likelihoods to estimate $\gamma$ and $\beta$.
+
+## EM algorithm
+
+Since we don't know the $Z_i$, we use the EM algorithm, which alternates between estimating the $Z_i$ and estimating $\gamma$ and $\beta$. The EM algorithm for a ZIP model is as follows:
+
+1. Calculate initial values $\gamma^{(0)}$ and $\beta^{(0)}$
+2. Alternate between the E and M steps:
+  * **E-step:** Give $Y_i$ and our current $\gamma^{(k)}$ and $\beta^{(k)}$,
+  
+  $$Z_i^{(k)} = \mathbb{E}[Z_i | Y_i, \gamma^{(k)}, \beta^{(k)}] = \begin{cases}
+  0 & Y_i > 0 \\
+  \frac{\widehat{p}_i}{\widehat{p}_i + e^{-\widehat{\lambda}_i}(1- \widehat{p}_i)} & Y_i = 0
+  \end{cases} $$
+  
+  where $\widehat{p}_i = \dfrac{\exp\{\gamma^{(k)T} X_i\}}{1 + \exp\{\gamma^{(k)T} X_i\}}$ and $\widehat{\lambda}_i = \exp\{\beta^{(k)T} X_i\}$.
+  
+  * **M-step:** Given $Y_i$ and our current $Z_i^{(k)}$, update the estimated coefficients:
+  
+  $$\beta^{(k+1)} = \text{argmax}_{\beta} \ \ \ell(\beta; Y, Z^{(k)})$$
+  
+  $$\gamma^{(k+1)} = \text{argmax}_{\gamma} \ \ \ell(\gamma; Y, Z^{(k)})$$
+  
+### Implementating the M-step for $\beta$
+
+To calculate the update $\beta^{(k+1)}$, we maximize
+
+$\ell(\beta; Y, Z^{(k)}) = \sum \limits_{i=1}^n (1 - Z_i^{(k)})(Y_i \log(\lambda_i) - \lambda_i) - \sum \limits_{i=1}^n (1 - Z_i^{(k)}) \log(Y_i!)$
+
+This is equivalent to a *weighted* Poisson regression of $Y_i$ on $X_i$, with weights $w_i = 1 - Z_i^{(k)}$. Intuitively, we place more weight on the observations which we think come from the Poisson distribution (higher $Z_i^{(k)}$) than the observations we think come from the point mass at 0 (lower $Z_i^{(k)}$). 
+
+In R, you can use the `weights` argument in the `glm` function to include weights for your model (and `family = poisson` for Poisson regression).
+
+### Implementating the M-step for $\gamma$
+
+To calculate the update $\gamma^{(k+1)}$, we maximize
+
+$\ell(\gamma; Y, Z^{(k)}) = \sum \limits_{i=1}^n \left\lbrace Z_i^{(k)} \log\left( \frac{p_i}{1 - p_i} \right) + \log(1 - p_i) \right\rbrace$
+
+Just like with the Poisson part of the model, the $Z_i^{(k)}$ are involved in weights. We can re-write the log-likelihood for the logistic part of the model as the log-likelihood for a weighted logistic regression:
+
+$\ell(\gamma; Y, Z^{(k)}) = \sum \limits_{i=1}^{2n} w_i^* (Y_i^* \log\left( \frac{p_i^*}{1 - p_i^*}\right) + \log(1 - p_i^*))$
+
+where 
+
+* $Y^* = (\mathbb{I}\{Y_1 = 0\}, ..., \mathbb{I}\{Y_n = 0\}, 0, 0, ..., 0)^T \in \mathbb{R}^{2n}$
+* $w^* = (Z_1^{(k)},...,Z_n^{(k)}, 1 - Z_1^{(k)},...,1 - Z_n^{(k)})^T \in \mathbb{R}^{2n}$
+* $X^* = \begin{bmatrix} X_1^T \\ X_2^T \\ \vdots \\ X_n^T \\ X_1^T \\ X_2^T \\ \vdots \\ X_n^T \end{bmatrix} \in \mathbb{R}^{2n \times p}$
+* $\log \left( \dfrac{p_i^*}{1 - p_i^*} \right) = \gamma^T X_i^*$
+
+In other words, we fit a weighted logistic regression of $Y_i^*$ on $X_i^*$.
+
+### Initialization
+
+* To initialize $\beta^{(0)}$, we will fit a regular (unweighted) Poisson regression of $Y_i$ on $X_i$
+* To initialize $\gamma^{(0)}$, we will use 
+
+$$\gamma^{(0)} = \left( \log \left( \frac{\widehat{p}_0}{1 - \widehat{p}_0} \right), 0, 0, ..., 0 \right)^T$$
+where $\widehat{p}_0 = \frac{1}{n} \sum \limits_{i=1}^n \mathbb{I}\{Y_i = 0\}$.
+
+  
+## The data
+
+We work with survey data from 77 college students on a dry campus (i.e., alcohol is prohibited) in the US. The survey asks students "How many alcoholic drinks did you consume last weekend?" The data includes the following variables:
+
+* `drinks`: the number of drinks the student reports consuming
+* `sex`: an indicator for whether the student identifies as male (1 = male)
+* `OffCampus`: an indicator for whether the student lives off campus (1 = off campus, 0 = on campus)
+* `FirstYear`: an indicator for whether the student is a first-year student (1 = first year, 0 = not first year)
+
+You can download the data with
+
+```{r, eval=F}
+wdrinks <- read.csv("https://sta712-f23.github.io/class_activities/wdrinks.csv")
+```
+
+:::{.question}
+#### Question 0
+
+Use the `zeroinfl` function in the `pscl` package to fit a ZIP model of `drinks` on `sex`, `OffCampus`, and `FirstYear`. Report the estimated coefficients. We will try to calculate those coefficients ourselves with the EM algorithm.
+:::
+
+## Coding the EM algorithm
+
+### Initialization
+
+:::{.question}
+#### Question 1
+
+Initialize $\beta^{(0)}$ by fitting an initial Poisson regression model of `drinks` on `sex`, `OffCampus`, and `FirstYear`.
+:::
+
+:::{.question}
+#### Question 2
+
+Initialize $\gamma^{(0)}$ as described above (estimate the fraction of students who reported consuming 0 drinks).
+:::
+
+### First E-step
+
+:::{.question}
+#### Question 3
+
+Using $\gamma^{(0)}$ and $\beta^{(0)}$, calculate $Z^{(0)}$.
+:::
+
+### First M-step
+
+:::{.question}
+#### Question 3
+
+Using $Z^{(0)}$, calculate the update $\beta^{(1)}$ by fitting a weighted Poisson regression as described above (use the `weights` argument in the `glm` function).
+:::
+
+:::{.question}
+#### Question 4
+
+Using $Z^{(0)}$, calculate the update $\gamma^{(1)}$ by fitting a weighted logistic regression as described above (use the `weights` argument in the `glm` function). 
+
+Note that you will have to create a new dataset to fit the weighted logistic regression!
+:::
+
+### Iteration
+
+:::{.question}
+#### Question 5
+
+Repeat the E and M steps several times. How many iterations does it take for the estimated coefficients to get close to the estimates from the `zeroinfl` function?
+:::
+
+:::{.question}
+#### Question 6
+
+Instead of iterating a fixed number of times, calculate the log-likelihood $\ell(\gamma, \beta)$ at each iteration of the EM algorithm, and iterate until the change in the log-likelihood is smaller than some threshold (e.g., 0.001).
+:::
+
+### Tidying up
+
+:::{.question}
+#### Question 7
+
+Organize your code above into a function for calculating the estimated coefficients of a ZIP model. The function could take arguments for the response vector, design matrix, maximum number of iterations, and the threshold for convergence.
+
+If you have extra time, try writing the function to accept a formula instead, like usual R models!
+:::

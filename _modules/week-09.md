@@ -8,6 +8,7 @@ October 23
     
 October 25
 : EM algorithm for ZIP models
+  : [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_24.html)
   
 October 27
 : EM algorithm
