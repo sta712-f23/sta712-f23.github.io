@@ -1,10 +1,12 @@
 
 # reg_formula: the formula specifying the response and explanatory variables
-#             Currently, does not allow for transformations or interactions
+#             Currently, assumes the same variables for both components
 # df: the data
 # eps: threshold for convergence (default 0.001)
 # iter: maximum number of iterations of the algorithm (default 100)
 my_zip <- function(reg_formula, df, eps = 0.001, iter = 100){
+  
+  # initialize Poisson, and use the initial model to get the design matrix and y
   initial_poisson <- glm(reg_formula,
                          family = poisson, 
                          data = df)
@@ -63,7 +65,7 @@ my_zip <- function(reg_formula, df, eps = 0.001, iter = 100){
     logL <- new_logL
   }
   
-  return(list(beta, gamma))
+  return(list("Count_model" = beta, "Zero_model" = gamma))
 }
 
 # test it out
