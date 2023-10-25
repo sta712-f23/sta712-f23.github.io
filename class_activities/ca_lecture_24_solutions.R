@@ -17,7 +17,7 @@ my_zip <- function(reg_formula, df, eps = 0.001, iter = 100){
   
   # initialize logistic
   phat <- mean(y == 0)
-  gamma <- c(log(phat/(1- phat)), 0, 0, 0)
+  gamma <- c(log(phat/(1- phat)), rep(0, length(beta) - 1))
   
   # initialize zs
   ps <- exp(X %*% gamma)/(1 + exp(X %*% gamma))
