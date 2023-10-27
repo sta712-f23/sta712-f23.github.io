@@ -1,0 +1,19 @@
+---
+title: "Lecture 25"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## The EM algorithm in general
+
+## Example: Gaussian mixtures
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_25.html](https://sta712-f23.github.io/class_activities/ca_lecture_25.html)

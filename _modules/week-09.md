@@ -12,3 +12,4 @@ October 25
   
 October 27
 : EM algorithm
+  : [slides (html)](https://sta712-f23.github.io/slides/lecture_23.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_23.pdf), [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_25.html),  [Class activity solutions](https://sta712-f23.github.io/class_activities/univariate_gaussian_em.R)

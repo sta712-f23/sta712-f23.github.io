@@ -1,0 +1,62 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# The EM algorithm for a Gaussian mixture
+
+## The EM algorithm in general
+
+Let $\theta \in \mathbb{R}^d$ be an unknown parameter we want to estimate. Let $Y = Y_1,...,Y_n$ be a set of observed data, and $Z = Z_1,...,Z_n$ a set of unobserved latent data. To estimate $\theta$, we want to maximize the likelihood
+
+$$L(\theta; Y) = f_Y(Y|\theta) = \int f_{Y|Z=z}(Y|\theta) f_Z(z) dz$$
+
+However, maximizing this likelihood is challenging when $Z$ is unobserved. Our solution is to alternate between the E and M steps of the EM algorithm:
+
+* **E step:** Let $\theta^{(k)}$ be the current estimate of $\theta$. Calculate
+
+$$Q(\theta | \theta^{(k)}) = \mathbb{E}_{Z|Y, \theta^{(k)}} [\log L(\theta; Z, Y)]$$
+
+* **M step:** $\theta^{(k+1)} = \text{argmax}_\theta \ Q(\theta | \theta^{(k)})$
+
+## Gaussian mixtures
+
+Let $Z_i \sim Bernoulli(\alpha)$, and $Y_i | (Z_i = j) \sim N(\mu_j, \sigma_j^2)$. Then our parameter vector of interest is $\theta = (\alpha, \mu_0, \mu_1, \sigma_0^2, \sigma_1^2)$, and the conditional density of $Y_i|Z_i = j$ is
+
+$$f_{Y_i|Z_i = j}(y | \theta) = \dfrac{1}{\sqrt{2 \pi \sigma_j^2}} \exp \left\lbrace - \dfrac{1}{2\sigma_j^2} (y - \mu_j)^2 \right\rbrace$$
+
+We observe data $Y_1,...,Y_n$, and our goal is to estimate $\theta$. We will use the EM algorithm to estimate these parameters.
+
+## EM for Gaussian mixtures
+
+It can be shown that
+
+$$Q(\theta | \theta^{(k)}) = \sum \limits_{i=1}^n \sum \limits_{j=0}^1 [\log \alpha_j - \frac{1}{2} \log(2 \pi \sigma_j^2) - \frac{1}{2 \sigma_j^2}(Y_i - \mu_j)^2]P(Z_i = j | Y_i, \theta^{(k)})$$
+
+where $\alpha_1 = \alpha$ and $\alpha_0 = 1 - \alpha$. Differentiating, we get that the parameter updates are:
+
+* $\mu_j^{(k+1)} = \dfrac{\sum \limits_{i=1}^n Y_i P(Z_i = j | Y_i, \theta^{(k)})}{\sum \limits_{i=1}^n P(Z_i = j | Y_i, \theta^{(k)})}$
+
+* $\alpha_j^{(k+1)} = \dfrac{\sum \limits_{i=1}^n P(Z_i = j | Y_i, \theta^{(k)})}{n}$
+
+* $\sigma_j^{2, (k+1)} = \dfrac{\sum \limits_{i=1}^n (Y_i - \mu_j^{(k+1)})^2 P(Z_i = j | Y_i, \theta^{(k)})}{\sum \limits_{i=1}^n P(Z_i = j | Y_i, \theta^{(k)})}$
+
+:::{.question}
+#### Question 1
+
+Generate $Y_1,...,Y_{1000}$ from a mixture of two univariate Gaussians, with $\alpha = 0.3$, $\mu_0 = 0$, $\mu_1 = 4$, and $\sigma_0^2 = \sigma_1^2 = 1$.
+:::
+
+:::{.question}
+#### Question 2
+
+Beginning with $\alpha^{(0)} = 0.5$, $\mu_0^{(0)} = 0$, $\mu_1^{(0)} = 1$, and $\sigma_0^{2,(0)} = \sigma_1^{2,(0)} = 0.5$, run 100 iterations of the EM algorithm. What are your estimated parameters at the end?
+
+You will need to figure out how to calculate $P(Z_i = j | Y_i, \theta^{(k)})$. (Hint: use Bayes' rule!)
+:::
+
+
