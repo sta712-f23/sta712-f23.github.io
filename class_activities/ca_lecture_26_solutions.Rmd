@@ -1,0 +1,70 @@
+---
+title: "Class activity solutions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+library(tidyverse)
+library(pscl)
+
+fish <- read.csv("https://sta214-s23.github.io/homework/fish2.csv")
+```
+
+1.
+
+```{r}
+m1 <- zeroinfl(count ~ camper + child + persons,
+               offset = log(LOS),
+               data = fish)
+summary(m1)
+```
+
+2.
+
+An increase of one in the number of children in the group is associated with an increase in the odds that the group did not fish by a factor of $\exp\{2.08\} = 8$, and a decrease in the number of fish caught *per day*, for groups which *did* fish, by a factor of $\exp\{-0.56\} = 0.57$.
+
+3.
+
+```{r}
+2.08 + 1.96*0.35
+2.08 - 1.96*0.35
+
+-0.56 + 1.96*0.09
+-0.56 - 1.96*0.09
+```
+
+In my model above, the relevant coefficients are $\gamma_2$ and $\beta_2$. A 95% confidence interval for $\gamma_2$ is [1.39, 2.77] and a 95% confidence interval for $\beta_2$ is [-0.75, -0.38].
+
+4.
+
+$P(Y_i \geq 1) = 1 - P(Y_i = 0) = 1 - (e^{-\lambda_i}(1 - p_i) + p_i)$
+
+So we need to calculate $\widehat{p}_i$ and $\widehat{\lambda}_i$. We are told that $Persons = 3$, $Child = 0$, $Camper = 0$, and $LOS = 3$. So,
+
+$\log \left( \dfrac{\widehat{p}_i}{1 - \widehat{p}_i} \right) = 1.81 - 0.98(3) = -1.13$
+
+and thus $\widehat{p}_i = 0.244$. Similarly,
+
+$\log (\widehat{\lambda}_i) = -1.13 + 0.45(3) + log(3) = 1.32$
+
+and so $\widehat{\lambda}_i = 3.74$. The estimated probability of catching at least one fish is therefore $1 - (e^{-3.74}(1 - 0.244) + 0.244) = 0.74$.
+
+
+5.
+
+We are interested in testing the coefficient on $Child$ for the logistic part of the model. Using the model from question 2, our hypotheses are $H_0: \gamma_2 = 0$ vs. $H_A: \gamma_2 > 0$ (remember that the logistic component models the probability the group does *not* go fishing). We use a Wald test; the test statistic is 6.01, and the p-value is
+
+```{r}
+pnorm(6.01, lower.tail=F)
+```
+
+
+6.
+
+We are interested in testing the coefficient on $Child$ in the Poisson part of the ZIP model. Using the model from question 2, our hypotheses are $H_0: \beta_2 = 0$ vs. $H_A: \beta_2 < 0$. We use a Wald test; the test statistic is -6.16, and the p-value is
+
+```{r}
+pnorm(-6.16, lower.tail=T)
+```
+
