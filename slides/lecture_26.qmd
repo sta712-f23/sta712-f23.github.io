@@ -1,0 +1,143 @@
+---
+title: "Lecture 26"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Data
+
+Data on the number of fish caught by campers in a state park. We have a sample of 250 groups of park guests who visited the state park. For each group, we record:
+
+* `count`: the number of fish caught by the group
+* `camper`: whether the group brought a camper van
+* `child`: the number of children in the group
+* `persons`: the total number of people in the group
+* `LOS`: length of stay (in days)
+
+What model is appropriate if the number of fish is our response?
+
+## Some EDA
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+library(tidyverse)
+library(pscl)
+library(MASS)
+
+fish <- read.csv("https://sta214-s23.github.io/homework/fish2.csv")
+```
+
+```{r, echo=F, message=F, warning=F}
+fish %>%
+  ggplot(aes(x = count)) +
+  geom_histogram() +
+  theme_bw() +
+  labs(x = "Fish caught")
+```
+
+```{r}
+mean(fish$count == 0)
+```
+
+## Research question
+
+Park rangers at the state park wonder whether groups with many children tend to catch
+fewer fish. They ask you to fit a model to investigate their hypothesis, and they want you
+to account for the total number of visitors in the group and whether the group brought a
+camper van (they suspect that camper vans make noise that scares away the fish).
+
+## Model
+
+$P(Y_i = y) = \begin{cases} e^{-\lambda_i}(1 - p_i) + p_i & y = 0 \\ \dfrac{e^{-\lambda_i} \lambda_i^y}{y!}(1 - p_i) & y > 0 \end{cases}$
+
+where
+
+$\log \left( \dfrac{p_i}{1 - p_i} \right) = \gamma_0 + \gamma_1 Camper_i + \gamma_2 Child_i + \gamma_3 Persons_i$
+
+$\log \left( \lambda_i \right) = \beta_0 + \beta_1 Camper_i + \beta_2 Child_i + \beta_3 Persons_i$
+
+**Question:** Is there anything else we should add?
+
+## Offsets
+
+$\log \left( \lambda_i \right) = \beta_0 + \beta_1 Camper_i + \beta_2 Child_i + \beta_3 Persons_i + \log(LOS_i)$
+
+## Fitting a model with an offset
+
+```{r}
+m1 <- glm(count ~ camper + child + persons, 
+          offset = log(LOS), data = fish, family = poisson)
+summary(m1)$coefficients
+```
+
+## Assessing the Poisson model
+
+```{r}
+library(countreg)
+
+rootogram(m1)
+```
+
+
+## ZIP model (with offset)
+
+$P(Y_i = y) = \begin{cases} e^{-\lambda_i}(1 - p_i) + p_i & y = 0 \\ \dfrac{e^{-\lambda_i} \lambda_i^y}{y!}(1 - p_i) & y > 0 \end{cases}$
+
+where
+
+$\log \left( \dfrac{p_i}{1 - p_i} \right) = \gamma_0 + \gamma_1 Camper_i + \gamma_2 Child_i + \gamma_3 Persons_i$
+
+$\log \left( \lambda_i \right) = \beta_0 + \beta_1 Camper_i + \beta_2 Child_i + \beta_3 Persons_i + \log(LOS_i)$
+
+```{r}
+m2 <- zeroinfl(count ~ camper + child + persons,
+               offset = log(LOS),
+               data = fish)
+```
+
+## Diagnostics
+
+```{r}
+rootogram(m2)
+```
+
+## Diagnostics
+
+Quantile residual plot:
+
+```{r, echo=F, message=F, warning=F}
+fish |>
+  mutate(resids = qresiduals(m2)) |>
+  ggplot(aes(x = persons, y = resids)) +
+  geom_point() +
+  theme_bw() +
+  labs(x = "Persons", y = "Quantile residuals") +
+  geom_smooth()
+
+```
+
+
+## Diagnostics
+
+Quantile residual plot:
+
+```{r, echo=F, message=F, warning=F}
+fish |>
+  mutate(resids = qresiduals(m2)) |>
+  ggplot(aes(x = as.factor(persons), y = resids)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(x = "Persons", y = "Quantile residuals") +
+  geom_smooth()
+
+```
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_26.html](https://sta712-f23.github.io/class_activities/ca_lecture_26.html)

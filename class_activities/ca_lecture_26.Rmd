@@ -1,0 +1,71 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+## Fishing data
+
+We have a sample of 250 groups of park guests who visited the state park. For each group, we record:
+
+* `count`: the number of fish caught by the group
+* `camper`: whether the group brought a camper van
+* `child`: the number of children in the group
+* `persons`: the total number of people in the group
+* `LOS`: length of stay (in days)
+
+The data can be downloaded into R with the following code:
+
+```{r, eval=F}
+fish <- read.csv("https://sta214-s23.github.io/homework/fish2.csv")
+```
+
+**Research question:** Park rangers at the state park wonder whether groups with many children tend to catch fewer fish. They ask you to fit a model to investigate their hypothesis, and they want you to account for the total number of visitors in the group and whether the group brought a camper van (they suspect that camper vans make noise that scares away the fish).
+
+
+:::{.question}
+#### Question 1
+
+Fit the ZIP model in R, and report the estimated coefficients. Don't forget to include the offset term!
+:::
+
+:::{.question}
+#### Question 2
+
+Interpret the fitted coefficients for child in the logistic and Poisson components of the
+model.
+:::
+
+:::{.question}
+#### Question 3
+
+Construct confidence intervals for the two coefficients in question 2.
+:::
+
+:::{.question}
+#### Question 4
+
+What is the predicted probability that a 3-person group with 0 children and no camper
+van, who stayed for 3 days, caught at least one fish during their stay?
+:::
+
+:::{.question}
+#### Question 5
+
+Are groups with more children less likely to go fishing? Carry out a hypothesis test: state
+the null and alternative hypotheses, report the test statistic, and make a conclusion in
+context.
+:::
+
+:::{.question}
+#### Question 6
+
+Do groups with more children, who do go fishing, catch fewer fish per day? Carry out a
+hypothesis test: state the null and alternative hypotheses, report the test statistic, and
+make a conclusion in context.
+:::
+
+
