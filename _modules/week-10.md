@@ -8,6 +8,7 @@ October 30
     
 November 1
 : Intro to multinomial regression
+  : [slides (html)](https://sta712-f23.github.io/slides/lecture_27.html), [slides (pdf)](https://sta712-f23.github.io/slides/lecture_27.pdf)
   
 November 3
 : Multinomial regression
