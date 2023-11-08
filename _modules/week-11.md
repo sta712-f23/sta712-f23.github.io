@@ -8,4 +8,4 @@ November 6
   
 November 8
 : Multinomial regression
-  : [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_30.html), [Class activity solutions](https://sta712-f23.github.io/class_activities/ca_lecture_30_solutions.R)
+  : [Class activity](https://sta712-f23.github.io/class_activities/ca_lecture_30.html), [Class activity solutions](https://sta712-f23.github.io/class_activities/ca_lecture_30_solutions.html)
