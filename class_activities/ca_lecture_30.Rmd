@@ -1,0 +1,225 @@
+---
+title: "Class Activity"
+output: 
+  rmdformats::robobook:
+    css: "homework.css"
+    highlight: pygments
+link-citations: yes
+---
+
+# School program choice
+
+In this class activity, you will work with data on 200 high school students. During high school, each student was placed in one of three tracks: general, academic, or vocational (it is unclear how much the choice was down to the student vs. the school). We are interested in building a model to predict the track for each student.
+
+The data can be imported into R with
+
+```{r}
+library(foreign)
+hsb <- read.dta("https://stats.idre.ucla.edu/stat/data/hsbdemo.dta")
+```
+
+Variables available in the data include
+
+* `program`: the track for each student (general, academic, vocation)
+* `ses`: the student's socioeconomic status (low, middle, high)
+* `schtyp`: type of school (public or private)
+* `write`: the student's score on a writing assessment
+
+## Initial EDA
+
+To begin, let's examine the relationship between several explanatory variables and the response (`program`).
+
+:::{.question}
+#### Question 1
+
+Create a table showing the relationship between socioeconomic status and program. Does there appear to be a difference in program for students in different socioeconomic statuses?
+:::
+
+:::{.question}
+#### Question 2
+
+Perhaps school type also influences program choice -- it is hard to imagine many private schools offering vocational education tracks. 
+
+Create a table showing the relationship between school type and program. What do you notice?
+:::
+
+:::{.question}
+#### Question 3
+
+Finally, let's examine the relationship between writing score and program choice. Use the `multinom_logit_plot` function below to create empirical logit plots. Describe the relationship between writing score and program choice. Do you think any transformations are needed?
+:::
+
+## Fitting a multinomial regression model
+
+Now let's fit a model to try and predict program choice.
+
+:::{.question}
+#### Question 4
+
+Using your EDA from above, fit a multinomial regression model with `program` as the response.
+:::
+
+:::{.question}
+#### Question 5
+
+Construct quantile residual plots for the fitted model, using the `qresid_multinom` function provided below. If needed, make any adjustments to the model.
+:::
+
+## Assessing predictions
+
+Now let's examine our model predictions! Just like with logistic regression, we can calculate a predicted class for each observation. In logistic regression, we chose the class based on a threshold. For multinomial regression, we typically choose the class with the highest predicted probability.
+
+In R, the `predict` function can be used to get both the predicted classes and the predicted probabilities. `predict(m1, type="probs")` will return a matrix of probabilities for each class, for each observations. `predict(m1, type="class")` will return a vector of the predicted classes.
+
+:::{.question}
+#### Question 6
+
+Confirm that `predict(m1, type="class")` returns the class with the highest predicted probability for each observation.
+:::
+
+With more than two levels of the response variable, it can be difficult to work out the relationship between the explanatory variables and the predicted probabilities. To further explore this relationship, we will plot the predicted probabilities for each class against the explanatory variables.
+
+:::{.question}
+#### Question 7
+
+The code below creates a plot of the predicted probabilities against writing score, faceted by socioeconomic status and school type. Create the plot; what patterns do you notice?
+
+```{r, eval=F}
+probs <- predict(m1, type="probs")
+
+hsb |>
+  dplyr::select(write, ses, schtyp) |>
+  cbind(probs) |>
+  pivot_longer(-c(write, ses, schtyp), names_to = "level", values_to = "probability") |>
+  arrange(write) |>
+  ggplot(aes(x = write, y = probability, color = level)) +
+  geom_line(lwd = 1.2) +
+  theme_bw() +
+  facet_grid(schtyp ~ ses)
+```
+
+:::
+
+Now let's assess predictive performance. Just like with logistic regression, we can create a confusion matrix. Accuracy is still defined as the overall fraction of correct predictions. Similar to sensitivity and specificity, we can also calculate the fraction of correct predictions within each group.
+
+
+:::{.question}
+#### Question 8
+
+Create a confusion matrix comparing the predicted programs to the observed programs. Does the model do a good job? Are we better at predicting one program than the others?
+:::
+
+Finally, we could create ROC curves to evaluate our predicted probabilities. However, we don't have just two classes anymore. One way to generalize the idea of an ROC curve is to create a separate curve for *each* class. This is the "one-vs-all" approach, in which we assess our ability to distinguish "academic" from "not academic", "general" from "not general", and "vocation" from "not vocation".
+
+The code below creates an ROC curve to assess our ability to identify "academic" students:
+
+```{r, eval=F}
+library(ROCR)
+
+is_academic <- ifelse(hsb$prog == "academic", 1, 0)
+pred <- prediction(probs[,"academic"], is_academic)
+perf <- performance(pred,"tpr","fpr")
+
+## Plot both ROC curves on the same graph
+data.frame(fpr = perf@x.values[[1]],
+           tpr = perf@y.values[[1]]) |>
+  ggplot(aes(x = fpr, y = tpr)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, lty = 2) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic()
+```
+
+:::{.question}
+#### Question 9
+
+Create an ROC curve for each program (academic, vocation, general). How does our model perform?
+:::
+
+## Comparison with logistic regressions
+
+The "one-vs-all" approach we used to assess prediction performance could also have been used, in principle, to fit the model: instead of using a single multinomial regression model, we could have fit 3 separate logistic regression models (one for each of the three levels of `program` -- "general" vs "not general", etc.).
+
+:::{.question}
+#### Question 10
+
+What are some differences between fitting several logistic regression models, and fitting a single multinomial model? Try fitting the logistic regression models, and compare the output to the multinomial fit.
+:::
+
+# Helper functions
+
+```{r, eval=F}
+multinom_logit_plot <- function(data, num_bins, bin_method,
+                        x, y, cat_num, cat_denom, 
+                        reg_formula = y ~ x){
+  
+  dat <- data.frame(x = data[,x], 
+                      y = data[,y],
+                      group = 1)
+  
+  dat <- dat %>%
+    dplyr::filter(y %in% c(cat_num, cat_denom)) %>%
+    mutate(obs = ifelse(y == cat_num, 1, 0))
+  
+  
+  if(bin_method == "equal_size"){
+    logodds_table <- dat %>%
+      drop_na() %>%
+      mutate(bin = rep(1:num_bins,
+                       each=ceiling(n()/num_bins))[1:n()]) %>%
+      group_by(bin) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  } else {
+    logodds_table <- dat %>%
+      arrange(x) %>%
+      drop_na() %>%
+      mutate(bin = cut(x, 
+                       breaks = num_bins,
+                       labels = F)) %>%
+      group_by(bin) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  }
+  
+  logodds_table %>%
+      ggplot(aes(x = mean_x,
+                 y = logodds)) +
+      geom_point(size=2.5) +
+      geom_smooth(se=F, method="lm", formula = reg_formula) +
+      theme_bw() +
+      labs(x = x,
+           y = paste("Log odds", cat_num, "vs.", cat_denom)) +
+      theme(text = element_text(size=15))
+  
+}
+
+
+
+qresid_multinom <- function(m1, y, category){
+  pred_probs <- predict(m1, type="probs")
+  level_names <- colnames(pred_probs)
+  base_category <- level_names[1]
+  pred_probs <- pred_probs[y %in% c(base_category, category),]
+  y <- y[y %in% c(base_category, category)]
+  
+  resids <- c()
+  for(i in 1:length(y)){
+    prob <- pred_probs[i,category]/(pred_probs[i, category] + 
+                                      pred_probs[i,base_category])
+    cur_y <- ifelse(y[i] == category, 1, 0)
+    cdf_b <- pbinom(cur_y, 1, prob)
+    cdf_a <- pbinom(cur_y - 1, 1, prob)
+    resids[i] <- qnorm(runif(1, cdf_a, cdf_b))
+  }
+  
+  return(resids)
+}
+```

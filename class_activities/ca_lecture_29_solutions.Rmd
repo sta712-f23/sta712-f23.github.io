@@ -1,0 +1,192 @@
+---
+title: "Class activity solutions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+library(tidyverse)
+library(nnet)
+
+source("http://www.openintro.org/stat/data/cdc.R")
+```
+
+```{r, include=F}
+multinom_logit_plot <- function(data, num_bins, bin_method,
+                        x, y, cat_num, cat_denom, 
+                        reg_formula = y ~ x){
+  
+  dat <- data.frame(x = data[,x], 
+                      y = data[,y],
+                      group = 1)
+  
+  dat <- dat %>%
+    dplyr::filter(y %in% c(cat_num, cat_denom)) %>%
+    mutate(obs = ifelse(y == cat_num, 1, 0))
+  
+  
+  if(bin_method == "equal_size"){
+    logodds_table <- dat %>%
+      drop_na() %>%
+      mutate(bin = rep(1:num_bins,
+                       each=ceiling(n()/num_bins))[1:n()]) %>%
+      group_by(bin) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  } else {
+    logodds_table <- dat %>%
+      arrange(x) %>%
+      drop_na() %>%
+      mutate(bin = cut(x, 
+                       breaks = num_bins,
+                       labels = F)) %>%
+      group_by(bin) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  }
+  
+  logodds_table %>%
+      ggplot(aes(x = mean_x,
+                 y = logodds)) +
+      geom_point(size=2.5) +
+      geom_smooth(se=F, method="lm", formula = reg_formula) +
+      theme_bw() +
+      labs(x = x,
+           y = paste("Log odds", cat_num, "vs.", cat_denom)) +
+      theme(text = element_text(size=15))
+  
+}
+
+
+
+qresid_multinom <- function(m1, y, category){
+  pred_probs <- predict(m1, type="probs")
+  level_names <- colnames(pred_probs)
+  base_category <- level_names[1]
+  pred_probs <- pred_probs[y %in% c(base_category, category),]
+  y <- y[y %in% c(base_category, category)]
+  
+  resids <- c()
+  for(i in 1:length(y)){
+    prob <- pred_probs[i,category]/(pred_probs[i, category] + 
+                                      pred_probs[i,base_category])
+    cur_y <- ifelse(y[i] == category, 1, 0)
+    cdf_b <- pbinom(cur_y, 1, prob)
+    cdf_a <- pbinom(cur_y - 1, 1, prob)
+    resids[i] <- qnorm(runif(1, cdf_a, cdf_b))
+  }
+  
+  return(resids)
+}
+```
+
+
+1.
+
+```{r}
+multinom_logit_plot(cdc, num_bins = 25, bin_method = "equal_size", 
+                    x = "age", y = "genhlth", 
+                    cat_num = "fair", cat_denom = "poor",
+                    reg_formula = y ~ x)
+```
+
+There doesn't appear to be a particularly strong relationship, but there also doesn't appear to be any shape violations. So, a linear relationship seems like it might be fine.
+
+2.
+
+```{r}
+multinom_logit_plot(cdc, num_bins = 25, bin_method = "equal_size", 
+                    x = "age", y = "genhlth", 
+                    cat_num = "good", cat_denom = "poor",
+                    reg_formula = y ~ x)
+```
+
+```{r}
+multinom_logit_plot(cdc, num_bins = 25, bin_method = "equal_size", 
+                    x = "age", y = "genhlth", 
+                    cat_num = "very good", cat_denom = "poor",
+                    reg_formula = y ~ x)
+```
+
+```{r}
+multinom_logit_plot(cdc, num_bins = 25, bin_method = "equal_size", 
+                    x = "age", y = "genhlth", 
+                    cat_num = "excellent", cat_denom = "poor",
+                    reg_formula = y ~ x)
+```
+
+3.
+
+```{r}
+cdc <- cdc |>
+  mutate(genhlth = relevel(genhlth, ref = "poor"))
+
+m1 <- multinom(genhlth ~ age + smoke100 + exerany + hlthplan, 
+               data = cdc)
+summary(m1)
+```
+
+4.
+
+```{r}
+cdc %>%
+  dplyr::filter(genhlth %in% c("poor", "fair")) %>%
+  mutate(resids = qresid_multinom(m1, cdc$genhlth, "fair")) %>%
+  ggplot(aes(x = age, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(title = "Fair vs. Poor")
+```
+
+5.
+
+```{r}
+cdc %>%
+  dplyr::filter(genhlth %in% c("poor", "good")) %>%
+  mutate(resids = qresid_multinom(m1, cdc$genhlth, "good")) %>%
+  ggplot(aes(x = age, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(title = "Good vs. Poor")
+```
+
+```{r}
+cdc %>%
+  dplyr::filter(genhlth %in% c("poor", "very good")) %>%
+  mutate(resids = qresid_multinom(m1, cdc$genhlth, "very good")) %>%
+  ggplot(aes(x = age, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(title = "Very good vs. Poor")
+```
+
+```{r}
+cdc %>%
+  dplyr::filter(genhlth %in% c("poor", "excellent")) %>%
+  mutate(resids = qresid_multinom(m1, cdc$genhlth, "excellent")) %>%
+  ggplot(aes(x = age, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(title = "Excellent vs. Poor")
+```
+
+
+6.
+
+```{r}
+m2 <- multinom(genhlth ~ smoke100 + exerany + hlthplan, 
+               data = cdc)
+
+pchisq(m2$deviance - m1$deviance, df=4, lower.tail=F)
+```
+

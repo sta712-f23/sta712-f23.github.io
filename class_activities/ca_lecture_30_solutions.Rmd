@@ -1,0 +1,283 @@
+---
+title: "Class activity solutions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+library(tidyverse)
+library(nnet)
+library(foreign)
+hsb <- read.dta("https://stats.idre.ucla.edu/stat/data/hsbdemo.dta")
+```
+
+```{r, include=F}
+multinom_logit_plot <- function(data, num_bins, bin_method,
+                        x, y, cat_num, cat_denom, 
+                        reg_formula = y ~ x){
+  
+  dat <- data.frame(x = data[,x], 
+                      y = data[,y],
+                      group = 1)
+  
+  dat <- dat %>%
+    dplyr::filter(y %in% c(cat_num, cat_denom)) %>%
+    mutate(obs = ifelse(y == cat_num, 1, 0))
+  
+  
+  if(bin_method == "equal_size"){
+    logodds_table <- dat %>%
+      drop_na() %>%
+      mutate(bin = rep(1:num_bins,
+                       each=ceiling(n()/num_bins))[1:n()]) %>%
+      group_by(bin) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  } else {
+    logodds_table <- dat %>%
+      arrange(x) %>%
+      drop_na() %>%
+      mutate(bin = cut(x, 
+                       breaks = num_bins,
+                       labels = F)) %>%
+      group_by(bin) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  }
+  
+  logodds_table %>%
+      ggplot(aes(x = mean_x,
+                 y = logodds)) +
+      geom_point(size=2.5) +
+      geom_smooth(se=F, method="lm", formula = reg_formula) +
+      theme_bw() +
+      labs(x = x,
+           y = paste("Log odds", cat_num, "vs.", cat_denom)) +
+      theme(text = element_text(size=15))
+  
+}
+
+
+
+qresid_multinom <- function(m1, y, category){
+  pred_probs <- predict(m1, type="probs")
+  level_names <- colnames(pred_probs)
+  base_category <- level_names[1]
+  pred_probs <- pred_probs[y %in% c(base_category, category),]
+  y <- y[y %in% c(base_category, category)]
+  
+  resids <- c()
+  for(i in 1:length(y)){
+    prob <- pred_probs[i,category]/(pred_probs[i, category] + 
+                                      pred_probs[i,base_category])
+    cur_y <- ifelse(y[i] == category, 1, 0)
+    cdf_b <- pbinom(cur_y, 1, prob)
+    cdf_a <- pbinom(cur_y - 1, 1, prob)
+    resids[i] <- qnorm(runif(1, cdf_a, cdf_b))
+  }
+  
+  return(resids)
+}
+```
+
+1.
+
+```{r}
+table(hsb$ses, hsb$prog)
+```
+
+There does appear to be a difference in program by socioeconomic status. Unsurprisingly, students in the "high" SES group are much more likely to be in the "academic" program. This could be due to a variety of factors related to SES (more prestigious schools with more academic options, private vs public schools, parents who can afford special tutoring and test prep opportunities, etc.)
+
+2.
+
+```{r}
+table(hsb$schtyp, hsb$prog)
+```
+
+Private school students are much more likely to be in the "academic" track (though the academic track is still the most popular option for public school students). Only two students in private school were in a vocational track. This also suggests that including an interaction between school type and other variables would be challenging, due to the small count in some of the groups.
+
+3. Here we'll treat "general" as the reference level for `program`.
+
+```{r}
+multinom_logit_plot(hsb, num_bins = 25, bin_method = "equal_size", 
+                    x = "write", y = "prog", 
+                    cat_num = "vocation", cat_denom = "general",
+                    reg_formula = y ~ x)
+```
+
+```{r}
+multinom_logit_plot(hsb, num_bins = 25, bin_method = "equal_size", 
+                    x = "write", y = "prog", 
+                    cat_num = "academic", cat_denom = "general",
+                    reg_formula = y ~ x)
+```
+
+
+There is a negative relationship between writing score and the log odds of vocation vs. general, and a positive relationship between writing score and the log odds of academic vs. general. It makes sense that students with higher writing scores would be placed in non-vocational tracks.
+
+I don't see any violations of the shape assumption here. There is a fair bit of variability in the points; this could be due to the small sample size, or because we need to include other variables in the model.
+
+4.
+
+```{r}
+m1 <- multinom(prog ~ ses + schtyp + write, data = hsb)
+summary(m1)
+```
+
+5.
+
+```{r}
+hsb %>%
+  dplyr::filter(prog %in% c("general", "academic")) %>%
+  mutate(resids = qresid_multinom(m1, hsb$prog, "academic")) %>%
+  ggplot(aes(x = write, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(title = "Academic vs general", 
+       x = "Writing score", y = "Residuals")
+```
+
+```{r}
+hsb %>%
+  dplyr::filter(prog %in% c("general", "vocation")) %>%
+  mutate(resids = qresid_multinom(m1, hsb$prog, "vocation")) %>%
+  ggplot(aes(x = write, y = resids)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw() +
+  labs(title = "Vocation vs general", 
+       x = "Writing score", y = "Residuals")
+```
+
+The quantile residual plots look pretty good -- I don't see any causes for concern.
+
+6.
+
+```{r}
+pred_class <- predict(m1)
+pred_probs <- predict(m1, type="probs")
+
+all(pred_class == colnames(pred_probs)[apply(pred_probs, 1, which.max)])
+```
+
+7.
+
+```{r, eval=F}
+probs <- predict(m1, type="probs")
+
+hsb |>
+  dplyr::select(write, ses, schtyp) |>
+  cbind(probs) |>
+  pivot_longer(-c(write, ses, schtyp), names_to = "level", values_to = "probability") |>
+  arrange(write) |>
+  ggplot(aes(x = write, y = probability, color = level)) +
+  geom_line(lwd = 1.2) +
+  theme_bw() +
+  facet_grid(schtyp ~ ses)
+```
+
+Due to the small counts in some of the groups, we want to be careful not to overinterpret the plots, but we can describe general trends. Some things to notice:
+
+* private school students may have higher writing scores than public school students
+* as writing score increases, the probability of being in the "academic" track increases
+* the vocational track is the most common track for students with very low writing scores
+
+8.
+
+```{r}
+table("prediction" = pred_class, "actual" = hsb$prog)
+```
+
+The overall accuracy is 124/200 = 0.62, but overall accuracy paints an incomplete picture of performance.
+
+We do a very good job at predicting the "academic" group (not surprising, since it is the largest group in the data), with 93/105 students correctly classified. Performance is worse for the vocation track (24/50 correct), and worst for the general track (only 7/45 correct). This may be because the "general" track is kind of in the "middle" -- at the extremes (very high writing score or very low writing score) it is easy to classify the observations, but the students with average writing scores (who are the most likely to be in the general track) are a mix of all three groups.
+
+9.
+
+```{r, eval=F}
+library(ROCR)
+
+is_academic <- ifelse(hsb$prog == "academic", 1, 0)
+pred <- prediction(probs[,"academic"], is_academic)
+perf <- performance(pred,"tpr","fpr")
+
+## Plot both ROC curves on the same graph
+data.frame(fpr = perf@x.values[[1]],
+           tpr = perf@y.values[[1]]) |>
+  ggplot(aes(x = fpr, y = tpr)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, lty = 2) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic()
+
+
+
+is_general <- ifelse(hsb$prog == "general", 1, 0)
+pred <- prediction(probs[,"general"], is_general)
+perf <- performance(pred,"tpr","fpr")
+
+## Plot both ROC curves on the same graph
+data.frame(fpr = perf@x.values[[1]],
+           tpr = perf@y.values[[1]]) |>
+  ggplot(aes(x = fpr, y = tpr)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, lty = 2) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic()
+
+
+
+is_vocation <- ifelse(hsb$prog == "vocation", 1, 0)
+pred <- prediction(probs[,"vocation"], is_vocation)
+perf <- performance(pred,"tpr","fpr")
+
+## Plot both ROC curves on the same graph
+data.frame(fpr = perf@x.values[[1]],
+           tpr = perf@y.values[[1]]) |>
+  ggplot(aes(x = fpr, y = tpr)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, lty = 2) +
+  labs(x = "False positive rate (1 - Specificity)",
+       y = "True positive rate (Sensitivity)") +
+  theme_classic()
+```
+
+
+We do the best at classifying academic and vocational students.
+
+10. The interpretation for the model coefficients will change. Instead of representing the log odds of one group vs. the reference group (the multinomial model), the coefficients will related to the log odds of one group vs. all the other groups.
+
+Also, when fitting three separate models, there is no constraint that the probabilities have to sum to 1.
+
+```{r}
+# check that all the probabilities for the multinomial model sum to 1
+all.equal(unname(rowSums(pred_probs)), rep(1, 200))
+
+# fit logistic models
+prog_data <- hsb |>
+  mutate(aca = (prog == "academic"),
+         gen = (prog == "general"),
+         voc = (prog == "vocation"))
+m1_1 <- glm(aca ~ ses + schtyp + write, data = prog_data,
+            family = binomial)
+m1_2 <- glm(gen ~ ses + schtyp + write, data = prog_data,
+            family = binomial)
+m1_3 <- glm(voc ~ ses + schtyp + write, data = prog_data,
+            family = binomial)
+
+probs_log <- 0*pred_probs
+probs_log[,1] <- predict(m1_2, type="response")
+probs_log[,2] <- predict(m1_1, type="response")
+probs_log[,3] <- predict(m1_3, type="response")
+hist(rowSums(probs_log))
+```
+
