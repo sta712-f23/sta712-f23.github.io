@@ -1,0 +1,156 @@
+---
+title: "Class Activity"
+output: 
+  tufte::tufte_html:
+    css: "lab.css"
+    tufte_variant: "envisioned"
+    highlight: pygments
+link-citations: yes
+---
+
+# Part I
+
+We have data on prices and other information for 1561 Airbnb rentals in Chicago, Illinois. Our goal is to model the relationship between price and overall satisfaction score. The information comes from 43 neighborhoods, and we have information on between 25 to 50 rentals per neighborhood. The variables we will be using are as follows:
+
+* `price`: The price in US dollars of a one night rental
+* `overall_satisfaction`: an average satisfaction score, given as numbers between 2.5 and 5
+* `neighborhood`: the neighborhood in which the rental is located
+
+You can load the Airbnb data into R with 
+
+```{r eval=F}
+bnb <- read.csv("https://raw.githubusercontent.com/proback/BYSH/master/data/airbnb.csv")
+```
+
+1. Why is a mixed effects model useful for modeling the relationship between price and overall satisfaction in this data?
+
+2. Write down the population linear mixed effects model for the relationship between price (the response) and overall satisfaction (the predictor), accounting for neighborhood with a random effect. *Note that satisfaction is a quantitative predictor, not a categorical predictor*.
+
+3. Run the following code to fit the mixed effects model from part I. Note that you will probably have to install the `lme4` package first:
+
+```{r eval=F}
+library(lme4)
+m1 <- lmer(price ~ overall_satisfaction + (1 | neighborhood), data = bnb)
+summary(m1)
+```
+
+4. Interpret the estimate fixed effect coefficients $\widehat{\beta}_0$ and $\widehat{\beta}_1$.
+
+5. Calculate and interpret the estimated intra-class correlation.
+
+# Part II
+
+In the second part of this class activity, we will explore how ignoring group structure / correlation causes problems for inference.
+
+The code below simulates data from the model
+
+$$Y_{ij} = 1 + u_i + 0.5 X_{ij} + \varepsilon_{ij}$$
+where $u_i \sim N(0, 0.25)$ and $\varepsilon_{ij} \sim N(0, 0.25)$. (So, the intra-class correlation is 0.5, which is quite large). Here $X_{ij} \sim N(0, 1)$, $i = 1,...,30$, and $j=1,...,10$. Note there is no relationship between the group and the distribution of $X_{ij}$.
+
+For each simulated dataset, a fixed effect model (ignoring group) and a mixed effect model (with a random intercept for group) are fit, and the p-value for testing $H_0: \beta_1 = 0$ is calculated.
+
+```{r, eval=F}
+library(lme4)
+library(lmerTest)
+
+m <- 30
+n_i <- 10
+n <- m*n_i
+groups <- rep(1:30, each=n_i)
+sigma_u <- 0.5
+sigma_e <- 0.5
+
+nsim <- 100
+pvals_fixed <- rep(NA, nsim)
+pvals_mixed <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  u <- rnorm(m, sd=sigma_u)
+  x <- rnorm(n)
+  y <- 1 + u[groups] + 0.1*x + rnorm(n, sd=sigma_e)
+  
+  m1 <- lm(y ~ x)
+  pvals_fixed[i] <- summary(m1)$coefficients[2,4]
+  
+  m2 <- lmer(y ~ x + (1|groups))
+  pvals_mixed[i] <- summary(m2)$coefficients[2,5]
+}
+```
+
+6. Which method is more powerful here? (Use $\alpha = 0.05$)
+
+7. How does relative power change as the intra-class correlation changes?
+
+8. Modify the simulation so $\beta_1 = 0$ (i.e., $H_0$ is true). Do both methods control the type I error rate? (Use $\alpha = 0.05$ again)
+
+Now let's try a different simulation. The code below simulates data from 
+
+$$Y_{ij} = 1 + u_i + \beta_1 X_{1,ij} + \beta_2 X_{2,i} + \varepsilon_{ij}$$
+with $u_i \sim N(0, 0.25)$ and $\varepsilon_{ij} \sim N(0, 0.25)$, and $\beta_1 = \beta_2 = 0$. Now we are testing $H_0: \beta_2 = 0$.
+
+```{r, eval=F}
+library(lme4)
+library(lmerTest)
+
+m <- 30
+n_i <- 10
+n <- m*n_i
+groups <- rep(1:30, each=n_i)
+sigma_u <- 0.5
+sigma_e <- 0.5
+
+nsim <- 100
+pvals_fixed <- rep(NA, nsim)
+pvals_mixed <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  u <- rnorm(m, sd=sigma_u)
+  x1 <- rnorm(n)
+  x2 <- rnorm(m)[groups]
+  y <- 1 + u[groups] + 0*x1 + 0*x2 + rnorm(n, sd=sigma_e)
+  
+  m1 <- lm(y ~ x1 + x2)
+  pvals_fixed[i] <- summary(m1)$coefficients[3,4]
+  
+  m2 <- lmer(y ~ x1 + x2 + (1|groups))
+  pvals_mixed[i] <- summary(m2)$coefficients[3,5]
+}
+```
+
+9. Do both methods control the type I error rate? 
+
+10. How does type I error control change as the intra-class correlation changes?
+
+
+```{r, include=F}
+library(lme4)
+library(lmerTest)
+
+m <- 30
+n_i <- 10
+n <- m*n_i
+groups <- rep(1:30, each=n_i)
+sigma_u <- 0.5
+sigma_e <- 0.5
+
+nsim <- 100
+pvals_fixed <- rep(NA, nsim)
+pvals_mixed <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  u <- rnorm(m, sd=sigma_u)
+  x <- rnorm(n)
+  y <- 1 + u[groups] + 0*x + rnorm(n, sd=sigma_e)
+  
+  m1 <- lm(y ~ x)
+  pvals_fixed[i] <- summary(m1)$coefficients[2,4]
+  
+  m2 <- lmer(y ~ x + (1|groups))
+  pvals_mixed[i] <- summary(m2)$coefficients[2,5]
+}
+```
+
+
+
+
+
