@@ -1,0 +1,124 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+1. There may be a group effect due to variation between the different neighborhoods (this roughly captures spatial correlation), so we want to include neighborhood in the model. However, with 43 neighborhoods, including fixed effects for neighborhood would add a lot of parameters to the model, and we are not interested in inference on the neighborhoods themselves.
+
+2. 
+
+$$Price_{ij} = \beta_0 + u_i + \beta_1 Satisfaction_{ij} + \varepsilon_{ij}$$
+
+where $u_i \overset{iid}{\sim} N(0, \sigma_u^2)$ and $\varepsilon_{ij} \overset{iid}{\sim} N(0, \sigma_\varepsilon^2)$.
+
+3. 
+
+```{r}
+bnb <- read.csv("https://raw.githubusercontent.com/proback/BYSH/master/data/airbnb.csv")
+
+library(lme4)
+m1 <- lmer(price ~ overall_satisfaction + (1 | neighborhood), data = bnb)
+summary(m1)
+```
+
+4. The average price (over neighborhoods) for a rental with satisfaction 0 is \$27.275. A one-unit increase in satisfaction is associated with an increase in price of \$14.809.
+
+5. $\widehat{\rho} = \frac{1048}{1048 + 6762} = 0.134$. After accounting for satisfaction, about 13% of the variability in price is due to differences between neighborhoods.
+
+6. The mixed effects model is more powerful.
+
+```{r, message=F, warning=F}
+library(lme4)
+library(lmerTest)
+
+m <- 30
+n_i <- 10
+n <- m*n_i
+groups <- rep(1:30, each=n_i)
+sigma_u <- 0.5
+sigma_e <- 0.5
+
+nsim <- 100
+pvals_fixed <- rep(NA, nsim)
+pvals_mixed <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  u <- rnorm(m, sd=sigma_u)
+  x <- rnorm(n)
+  y <- 1 + u[groups] + 0.1*x + rnorm(n, sd=sigma_e)
+  
+  m1 <- lm(y ~ x)
+  pvals_fixed[i] <- summary(m1)$coefficients[2,4]
+  
+  m2 <- lmer(y ~ x + (1|groups))
+  pvals_mixed[i] <- summary(m2)$coefficients[2,5]
+}
+
+mean(pvals_fixed < 0.05)
+mean(pvals_mixed < 0.05)
+```
+
+7. As intra-class correlation increases, the mixed effects model becomes more powerful (relatively) than the fixed effect approach.
+
+8. Both methods do control the type I error rate.
+
+```{r, message=F, warning=F}
+m <- 30
+n_i <- 10
+n <- m*n_i
+groups <- rep(1:30, each=n_i)
+sigma_u <- 0.5
+sigma_e <- 0.5
+
+nsim <- 100
+pvals_fixed <- rep(NA, nsim)
+pvals_mixed <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  u <- rnorm(m, sd=sigma_u)
+  x <- rnorm(n)
+  y <- 1 + u[groups] + 0*x + rnorm(n, sd=sigma_e)
+  
+  m1 <- lm(y ~ x)
+  pvals_fixed[i] <- summary(m1)$coefficients[2,4]
+  
+  m2 <- lmer(y ~ x + (1|groups))
+  pvals_mixed[i] <- summary(m2)$coefficients[2,5]
+}
+
+mean(pvals_fixed < 0.05)
+mean(pvals_mixed < 0.05)
+```
+
+9. The mixed effects model approximately controls the type I error, but the fixed effects model (which ignores groups) does not control type I error.
+
+```{r}
+m <- 30
+n_i <- 10
+n <- m*n_i
+groups <- rep(1:30, each=n_i)
+sigma_u <- 0.5
+sigma_e <- 0.5
+
+nsim <- 100
+pvals_fixed <- rep(NA, nsim)
+pvals_mixed <- rep(NA, nsim)
+
+for(i in 1:nsim){
+  u <- rnorm(m, sd=sigma_u)
+  x1 <- rnorm(n)
+  x2 <- rnorm(m)[groups]
+  y <- 1 + u[groups] + 0*x1 + 0*x2 + rnorm(n, sd=sigma_e)
+  
+  m1 <- lm(y ~ x1 + x2)
+  pvals_fixed[i] <- summary(m1)$coefficients[3,4]
+  
+  m2 <- lmer(y ~ x1 + x2 + (1|groups))
+  pvals_mixed[i] <- summary(m2)$coefficients[3,5]
+}
+```
+
+10. As intra-class correlation increases, type I error for the fixed effects model increases.
+

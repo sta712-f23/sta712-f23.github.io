@@ -1,0 +1,62 @@
+---
+title: "Class activity solutions"
+format: html
+editor: source
+author: "Ciaran Evans"
+---
+
+```{r}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+music <- read_csv("https://sta279-s22.github.io/labs/music.csv")
+```
+
+1. 
+
+$$Anxiety_{ij} = \beta_0 + \beta_1 Juried_{ij} + \beta_2 Public_{ij} + \beta_3 Student_{ij} + \beta_4 Large_{ij} + u_i + \varepsilon_{ij}$$
+
+$u_i \overset{iid}{\sim} N(0, \sigma_u^2)$, $\varepsilon_{ij} \overset{iid}{\sim} N(0, \sigma_\varepsilon^2)$
+
+* The researchers think that audience type and ensemble size may be related to anxiety, so we include those as fixed effects
+* The researchers suspect that there is variation in anxiety between musicians, so we include a random intercept ($u_i$) that captures variability. We're not including a random slope (yet) because the researchers assume that the effects of audience type and ensemble size (i.e. $\beta_1$,...,$\beta_4$) are the same for every musician
+
+2.
+
+```{r}
+m1 <- lmer(na ~ audience + large + (1|id), data = music)
+summary(m1)
+```
+
+Estimated fixed effects:
+
+* $\widehat{\beta}_0 = 14.98$
+* $\widehat{\beta}_1 = 3.76$
+* $\widehat{\beta}_2 = 2.20$
+* $\widehat{\beta}_3 = 3.19$
+* $\widehat{\beta}_4 = -2.23$
+
+Estimated variance parameters:
+
+* $\widehat{\sigma_u}^2 = 6.06$
+* $\widehat{\sigma}_\varepsilon^2 = 20.29$
+
+3.
+
+Holding audience type fixed, we estimate that student anxiety is 2.23 points lower before large ensemble performances, vs. small ensemble performances. This supports the researchers' hypothesis that students are less nervous when performing in large ensembles.
+
+4.
+
+The estimated intra-class correlation is $\widehat{\rho}_{group} = \dfrac{6.06}{6.06 + 20.29} = 0.23$. That is, after accounting for audience type and ensemble size, about 23% of variability in anxiety levels is due to differences in anxiety between musicians. This is a moderate intra-class correlation, and suggests that there may be systematic variability in anxiety between students.
+
+5.
+
+```{r}
+m1 <- lmer(na ~ audience + large + (large|id), data = music)
+summary(m1)
+```
+
+6.
+
+Students with higher anxiety before small performances in front of instructors tend to have a greater decrease in anxiety before large ensemble performances. (The point is that $\widehat{\rho}_{uv} < 0$, so positive $u_i$ is associated with negative $v_i$)
+

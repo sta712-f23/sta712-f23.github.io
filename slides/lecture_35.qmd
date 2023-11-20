@@ -1,0 +1,152 @@
+---
+title: "Lecture 35"
+format: 
+  revealjs:
+    theme: theme.scss
+editor: source
+execute:
+  echo: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Data: flipped classrooms?
+
+Data set has 375 rows (one per student), and the following variables:
+
+* `professor`: which professor taught the class (1 -- 15)
+* `style`: which teaching style the professor used (no flip, some flip, fully flipped)
+* `score`: the student's score on the final exam
+
+
+## Inference with linear models
+
+\begin{align}
+Score_i &= \beta_0 + \beta_1 \text{SomeFlipped}_i + \beta_2 \text{FullyFlipped}_i + \varepsilon_{i}
+\end{align}
+
+**Research question:** Is there a relationship between teaching style and student score?
+
+What are my null and alternative hypotheses, in terms of one or more model parameters?
+
+
+## Inference with linear models
+
+\begin{align}
+Score_i &= \beta_0 + \beta_1 \text{SomeFlipped}_i + \beta_2 \text{FullyFlipped}_i + \varepsilon_{i}
+\end{align}
+
+**Research question:** Is there a relationship between teaching style and student score?
+
+$H_0: \beta_1 = \beta_2 = 0$
+
+$H_A: \text{at least one of } \beta_1, \beta_2 \neq 0$
+
+What test would I use to test these hypotheses?
+
+## F tests
+
+\begin{align}
+Score_i &= \beta_0 + \beta_1 \text{SomeFlipped}_i + \beta_2 \text{FullyFlipped}_i + \varepsilon_{i}
+\end{align}
+
+**Research question:** Is there a relationship between teaching style and student score?
+
+$H_0: \beta_1 = \beta_2 = 0$
+
+$H_A: \text{at least one of } \beta_1, \beta_2 \neq 0$
+
+What are my degrees of freedom for the F test?
+
+## F tests for mixed effects models
+
+\begin{align}
+Score_{ij} &= \beta_0 + \beta_1 \text{SomeFlipped}_i + \beta_2 \text{FullyFlipped}_i + u_i + \varepsilon_{ij}
+\end{align}
+
+**Research question:** Is there a relationship between teaching style and student score?
+
+What are my null and alternative hypotheses, in terms of one or more model parameters?
+
+## F tests for mixed effects models
+
+\begin{align}
+Score_{ij} &= \beta_0 + \beta_1 \text{SomeFlipped}_i + \beta_2 \text{FullyFlipped}_i + u_i + \varepsilon_{ij}
+\end{align}
+
+**Research question:** Is there a relationship between teaching style and student score?
+
+$H_0: \beta_1 = \beta_2 = 0$
+
+$H_A: \text{at least one of } \beta_1, \beta_2 \neq 0$
+
+**Test:** We will use an F test again
+
+* numerator df = number of parameters tested = 2
+* denominator df = ??
+
+## What *are* degrees of freedom?
+
+
+## Denominator degrees of freedom for mixed models
+
+\begin{align}
+Score_{ij} &= \beta_0 + \beta_1 \text{SomeFlipped}_i + \beta_2 \text{FullyFlipped}_i + u_i + \varepsilon_{ij}
+\end{align}
+
+$H_0: \beta_1 = \beta_2 = 0 \hspace{1cm} H_A: \text{at least one of } \beta_1, \beta_2 \neq 0$
+
+**Test:** We will use an F test again
+
+* numerator df = number of parameters tested = 2
+* denominator df = 
+
+$$\text{number of independent observations} - \text{number of parameters}$$
+
+Are all observations independent?
+
+
+## Denominator degrees of freedom for mixed models
+
+
+## Approximating the degrees of freedom
+
+```{r, include=F}
+library(lme4)
+library(lmerTest)
+```
+
+
+```{r}
+groups <- rep(1:30, each=10)
+sigma_u <- 0.1
+sigma_e <- 0.5
+
+u <- rnorm(30, sd=sigma_u)
+x1 <- rnorm(300)
+y <- 1 + u[groups] + 0.5*x1 + rnorm(300, sd=sigma_e)
+
+m1 <- lmer(y ~ x1 + (1|groups))
+summary(m1)$coefficients
+```
+
+## Approximating the degrees of freedom
+
+```{r}
+groups <- rep(1:30, each=10)
+sigma_u <- 1
+sigma_e <- 0.5
+
+u <- rnorm(30, sd=sigma_u)
+x1 <- rnorm(300)
+y <- 1 + u[groups] + 0.5*x1 + rnorm(300, sd=sigma_e)
+
+m1 <- lmer(y ~ x1 + (1|groups))
+summary(m1)$coefficients
+```
+
+
+## Class activity
+
+[https://sta712-f23.github.io/class_activities/ca_lecture_35.html](https://sta712-f23.github.io/class_activities/ca_lecture_35.html)
+
