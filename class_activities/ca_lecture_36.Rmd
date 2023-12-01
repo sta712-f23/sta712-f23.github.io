@@ -116,3 +116,19 @@ Simulate data many times, with $H_0: \beta_1 = 0$ true in each simulation. Test 
 Does type I error control depend on the number of groups ($m$), or the number of observations within each group ($n_i$)?
 
 :::
+
+:::{.question}
+#### Question 7
+
+Repeat question 5, but this time use an unstructured covariance matrix when fitting the GEE. How does that impact type I error control?
+
+:::
+
+Finally, let's generate data with an unstructured covariance matrix, and fit a GEE that assumes an *exchangeable* correlation structure. To generate data with an unstructured covariance matrix, the `mvrnorm` function from the `MASS` package may be helpful. To create an arbitrary covariance matrix, recall that $\Sigma$ must be a positive semi-definite matrix, and any real positive semi-definite matrix can be written $B^TB$.
+
+:::{.question}
+#### Question 8
+
+Simulate data from an unstructured covariance matrix, and fit a GEE with exchangeable correlation structure. Does the GEE do ok at controlling the type I error?
+
+:::
