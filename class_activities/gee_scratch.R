@@ -81,6 +81,41 @@ mean(pvals_gee < 0.05)
 
 
 
+
+
+
+
+
+m <- 10
+n_i <- 10
+n <- m*n_i
+groups <- rep(1:m, each=n_i)
+sigma_u <- 0.5
+sigma_e <- 0.5
+
+nsim <- 500
+pvals_gee <- rep(NA, nsim)
+for(i in 1:nsim){
+  u <- rnorm(m, sd=sigma_u)
+  x1 <- rnorm(n)
+  x2 <- rnorm(m)[groups]
+  y <- 1 + u[groups] + 0*x1 + 1*x2 + rnorm(n, sd=sigma_e)
+  
+  m1 <- gee(y ~ x1 + x2, id = groups, corstr = "unstructured")
+  
+  pvals_gee[i] <- 2*pnorm(abs(summary(m1)$coefficients[2,5]), lower.tail=F)
+  
+  print(i)
+}
+
+mean(pvals_gee < 0.05)
+
+
+
+
+
+
+
 m <- 10
 n_i <- 100
 n <- m*n_i
